@@ -9,7 +9,7 @@
 - **Architecture**: Next.js Modular Monolith (App Router)
 - **Frontend**: Next.js 15+, React 19, TypeScript, Tailwind CSS, shadcn/ui, Lucide Icons
 - **Backend**: Next.js Server Components, Server Actions, Route Handlers, Service Layer, Zod validation
-- **Database**: PostgreSQL 16 with Prisma ORM
+- **Database**: PostgreSQL 16 with Prisma ORM (host `localhost:5433` $\rightarrow$ container `5432`)
 - **Authentication**: NextAuth / Auth.js v5 (Credentials, bcrypt, HTTP-only secure cookies)
 - **Security**: Stealth Admin route (`/secure-console-x7`) protected by server-side `requireAdmin()` guard
 - **Media Storage**: S3-compatible Object Storage (Cloudflare R2 / AWS S3)
@@ -30,7 +30,7 @@ English Sentence  ──>  Vietnamese Translation  ──>  Vocabulary Highlight
 | :--- | :--- | :--- | :--- |
 | **Phase 0** | **Project Discovery** | **COMPLETED** | Requirements, Architecture, Database Design, Security Spec, Risk Analysis |
 | **Phase 1** | **Project Foundation** | **COMPLETED** | Next.js 15, TypeScript, Tailwind CSS, Shell Layout, Error Boundaries |
-| **Phase 2** | **Database Implementation** | **PLAN (WAITING APPROVAL)** | PostgreSQL, Prisma Schema (14 entities), Migrations, Seed Data |
+| **Phase 2** | **Database Implementation** | **PLAN REVISED (WAITING APPROVAL)** | PostgreSQL, Prisma Schema (14 entities), Migrations, Original Educational Seeder |
 | **Phase 3** | **Authentication & Authorization** | PENDING | Auth.js, bcrypt, Sessions, Stealth Admin Guard (`requireAdmin()`) |
 | **Phase 4** | **Private Admin CMS** | PENDING | Stealth Admin Console (`/secure-console-x7`), Full CRUD (Articles, Sentences, Vocab) |
 | **Phase 5** | **Public Homepage** | PENDING | Hero, Latest Articles Feed, Category Chips, CEFR Filters |
