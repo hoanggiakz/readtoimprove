@@ -32,8 +32,8 @@ English Sentence  ──>  Vietnamese Translation  ──>  Vocabulary Highlight
 | **Phase 1** | **Project Foundation** | **COMPLETED** | Next.js 15, TypeScript, Tailwind CSS, Shell Layout, Error Boundaries |
 | **Phase 2** | **Database Implementation** | **COMPLETED** | PostgreSQL 16, Prisma Schema (14 entities), Migrations, Original Educational Seeder |
 | **Phase 3** | **Authentication & Authorization** | **COMPLETED & VERIFIED** | Session Auth, bcrypt, `requireAdmin()`, Stealth Route Guard, Login/Register UX |
-| **Phase 4** | **Private Admin CMS** | **PENDING (NEXT)** | Stealth Admin Console (`/secure-console-x7`), Full CRUD (Articles, Sentences, Vocab) |
-| **Phase 5** | **Public Homepage** | PENDING | Hero, Latest Articles Feed, Category Chips, CEFR Filters |
+| **Phase 4** | **Private Admin CMS** | **COMPLETED & VERIFIED** | Stealth Admin Console (`/secure-console-x7`), Full CRUD, Offset Engine, 20 Tests |
+| **Phase 5** | **Public Discovery & Content Browsing** | **PENDING (NEXT)** | Hero, Latest Articles Feed, Category Chips, CEFR Filters |
 | **Phase 6** | **Article Reading Experience** | PENDING | Bilingual Sentence Reader, Translation Toggle, Progress Tracker |
 | **Phase 7** | **Vocabulary & Word Bank** | PENDING | Offset-based Highlighting, Tooltip Popover, CEFR Word Bank Drawer |
 | **Phase 8** | **Search & Filter** | PENDING | Full-text Article Search, Combined Filters, Autocomplete |

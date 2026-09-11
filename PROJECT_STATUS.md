@@ -1,7 +1,7 @@
 # READTOIMPROVE — PROJECT STATUS
 
 Current Phase: PHASE 04 — PRIVATE ADMIN CMS
-Current Status: PLAN (Creating Implementation Plan; will await User Approval)
+Current Status: COMPLETED (Phase 4 Verified & Reported; Ready for Phase 5)
 
 ---
 
@@ -48,15 +48,29 @@ Current Status: PLAN (Creating Implementation Plan; will await User Approval)
 
 ---
 
+- **PHASE 04 — PRIVATE ADMIN CMS** (Completed: 2026-09-11)
+  - Zod validation schemas (`src/validations/admin.ts`) & Character offset calculation engine (`src/lib/offsets.ts`)
+  - Server Actions in `src/lib/actions/admin.ts` with `requireAdmin()` and `AuditLog`
+  - Article state machine lifecycle: DRAFT -> PENDING_REVIEW -> PUBLISHED -> ARCHIVED
+  - Scheduled publishing processor with automated UI trigger
+  - Destructive action policy enforcement (direct delete blocked on PUBLISHED)
+  - Global Vocabulary preservation rule strictly enforced on cascade delete
+  - Global Vocabulary deletion guard (referenced deletion blocked)
+  - Comprehensive self-lockout prevention (admin cannot deactivate self or demote sole admin)
+  - 7 Admin CMS views under `/secure-console-x7` (Dashboard, Articles, Sentence Editor, Vocab Tag Modal, Categories, Vocabulary Bank, Users, Audit Logs)
+  - Automated verification suite `scripts/verify-admin.ts` (20/20 PASS)
+  - Phase 4 Report: [docs/phases/PHASE_04_REPORT.md](file:///d:/readtoimprove/docs/phases/PHASE_04_REPORT.md)
+
+---
+
 ## Current Phase
-- **PHASE 04 — PRIVATE ADMIN CMS**
-  - Status: `PLAN` (Preparing Implementation Plan)
-  - Plan Document: [docs/phases/PHASE_04_IMPLEMENTATION_PLAN.md](file:///d:/readtoimprove/docs/phases/PHASE_04_IMPLEMENTATION_PLAN.md)
+- **PHASE 05 — PUBLIC DISCOVERY & CONTENT BROWSING**
+  - Status: `WAIT` (Awaiting approval to begin Phase 5 planning)
 
 ---
 
 ## Next Phase
-- **PHASE 05 — PUBLIC DISCOVERY & CONTENT BROWSING**
+- **PHASE 06 — INTERACTIVE BILINGUAL READING EXPERIENCE & WORD BANK**
 
 ---
 

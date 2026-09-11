@@ -4,6 +4,7 @@ import { ShieldCheck, LogOut } from "lucide-react";
 import { requireAdmin } from "@/lib/security";
 import { logoutAction } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/button";
+import { AdminNav } from "@/components/admin/admin-nav";
 
 export const metadata: Metadata = {
   robots: {
@@ -62,6 +63,9 @@ export default async function AdminLayout({
           </form>
         </div>
       </header>
+
+      {/* Admin Navigation Bar */}
+      <AdminNav />
 
       {/* Main Admin Area */}
       <main className="flex-1 p-6 max-w-7xl mx-auto w-full">{children}</main>
