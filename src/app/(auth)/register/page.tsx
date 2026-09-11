@@ -1,0 +1,25 @@
+import * as React from "react";
+import type { Metadata } from "next";
+import { RegisterForm } from "@/components/auth/register-form";
+
+export const metadata: Metadata = {
+  title: "Đăng ký tài khoản",
+  description: "Tạo tài khoản học viên miễn phí trên ReadToImprove.",
+};
+
+export default function RegisterPage() {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-1.5 text-center">
+        <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+          Tạo tài khoản học viên
+        </h1>
+        <p className="text-xs text-muted-foreground">
+          Bắt đầu hành trình nâng cao phản xạ đọc tin tức song ngữ Anh–Việt
+        </p>
+      </div>
+
+      <RegisterForm />
+    </div>
+  );
+}
