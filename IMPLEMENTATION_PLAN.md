@@ -29,8 +29,8 @@ English Sentence  ──>  Vietnamese Translation  ──>  Vocabulary Highlight
 | Phase | Title | Status | Primary Output |
 | :--- | :--- | :--- | :--- |
 | **Phase 0** | **Project Discovery** | **COMPLETED** | Requirements, Architecture, Database Design, Security Spec, Risk Analysis |
-| **Phase 1** | **Project Foundation** | **PLAN (WAITING APPROVAL)** | Next.js 15, TypeScript, Tailwind CSS, Shell Layout, Error Boundaries |
-| **Phase 2** | **Database Implementation** | PENDING | PostgreSQL, Prisma Schema (14 entities), Migrations, Seed Data |
+| **Phase 1** | **Project Foundation** | **COMPLETED** | Next.js 15, TypeScript, Tailwind CSS, Shell Layout, Error Boundaries |
+| **Phase 2** | **Database Implementation** | **PLAN (WAITING APPROVAL)** | PostgreSQL, Prisma Schema (14 entities), Migrations, Seed Data |
 | **Phase 3** | **Authentication & Authorization** | PENDING | Auth.js, bcrypt, Sessions, Stealth Admin Guard (`requireAdmin()`) |
 | **Phase 4** | **Private Admin CMS** | PENDING | Stealth Admin Console (`/secure-console-x7`), Full CRUD (Articles, Sentences, Vocab) |
 | **Phase 5** | **Public Homepage** | PENDING | Hero, Latest Articles Feed, Category Chips, CEFR Filters |
