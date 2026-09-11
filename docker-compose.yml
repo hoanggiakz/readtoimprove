@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: readtoimprove-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: readtoimprove
+    ports:
+      - "5433:5432"
+    volumes:
+      - readtoimprove_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d readtoimprove"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  readtoimprove_pgdata:
+    driver: local
