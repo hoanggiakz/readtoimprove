@@ -1,7 +1,7 @@
 # READTOIMPROVE — PROJECT STATUS
 
-Current Phase: PHASE 04 — PRIVATE ADMIN CMS
-Current Status: COMPLETED (Phase 4 Verified & Reported; Ready for Phase 5)
+Current Phase: PHASE 06 — ARTICLE READING EXPERIENCE
+Current Status: COMPLETED (Phase 6 Verified & Reported; Ready for Phase 7)
 
 ---
 
@@ -78,14 +78,31 @@ Current Status: COMPLETED (Phase 4 Verified & Reported; Ready for Phase 5)
 
 ---
 
+- **PHASE 06 — ARTICLE READING EXPERIENCE** (Completed: 2026-09-12)
+  - Sentence slicing engine (`src/lib/sentence-slicer.ts`) with deterministic offset bounds & overlap protection
+  - Sentence-by-sentence English/Vietnamese alignment with sequential numbering
+  - 3 translation modes: `ALL` (Show all), `INTERACTIVE` (Hover/Tap to reveal), `HIDE` (English only)
+  - LocalStorage reader persistence (`translationMode` and `fontSize`) with hydration-safe SSR defaults
+  - 4-level font size controls (`SMALL`, `MEDIUM`, `LARGE`, `EXTRA_LARGE`)
+  - Accessible vocabulary popovers with phonetic IPA, audio speaker, part of speech, CEFR badge, Vietnamese translation, and contextual bilingual examples
+  - Top reading progress bar updating on scroll via `requestAnimationFrame`
+  - Server Component architecture with single optimized query and clean `SentenceDTO` serialization
+  - Injected Schema.org `NewsArticle` JSON-LD structured data and preserved SEO metadata
+  - Automated test suite `scripts/verify-reader.ts` (26/26 PASS)
+  - Full regression pass: DB, Auth, Admin, Public, Typecheck, ESLint, and Next.js production build all PASS
+  - Full browser E2E verification of popover interactions, audio trigger, escape key dismiss, translation toggling, font resizing, and progress tracking
+  - Phase 6 Report: [docs/phases/PHASE_06_REPORT.md](file:///d:/readtoimprove/docs/phases/PHASE_06_REPORT.md)
+
+---
+
 ## Current Phase
-- **PHASE 05 — PUBLIC DISCOVERY & CONTENT BROWSING**
-  - Status: `COMPLETED` (Verified & Reported; Ready for Phase 6)
+- **PHASE 06 — ARTICLE READING EXPERIENCE**
+  - Status: `COMPLETED` (Verified, Tested, Reported; Ready for Phase 7 Approval)
 
 ---
 
 ## Next Phase
-- **PHASE 06 — INTERACTIVE BILINGUAL READING EXPERIENCE & WORD BANK**
+- **PHASE 07 — VOCABULARY & WORD BANK**
 
 ---
 

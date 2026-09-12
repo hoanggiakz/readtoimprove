@@ -34,8 +34,8 @@ English Sentence  ──>  Vietnamese Translation  ──>  Vocabulary Highlight
 | **Phase 3** | **Authentication & Authorization** | **COMPLETED & VERIFIED** | Session Auth, bcrypt, `requireAdmin()`, Stealth Route Guard, Login/Register UX |
 | **Phase 4** | **Private Admin CMS** | **COMPLETED & VERIFIED** | Stealth Admin Console (`/secure-console-x7`), Full CRUD, Offset Engine, 20 Tests |
 | **Phase 5** | **Public Discovery & Content Browsing** | **COMPLETED & VERIFIED** | Hero Spotlight, Articles Catalog, Categories, CEFR, Search, 20 Tests |
-| **Phase 6** | **Article Reading Experience** | **PENDING (NEXT)** | Bilingual Sentence Reader, Translation Toggle, Progress Tracker |
-| **Phase 7** | **Vocabulary & Word Bank** | PENDING | Offset-based Highlighting, Tooltip Popover, CEFR Word Bank Drawer |
+| **Phase 6** | **Article Reading Experience** | **COMPLETED & VERIFIED** | Bilingual Sentence Reader, Translation Toggle, Progress Tracker, Slicing Engine |
+| **Phase 7** | **Vocabulary & Word Bank** | **PENDING (NEXT)** | Offset-based Highlighting, Tooltip Popover, CEFR Word Bank Drawer |
 | **Phase 8** | **Search & Filter** | PENDING | Full-text Article Search, Combined Filters, Autocomplete |
 | **Phase 9** | **User Features** | PENDING | Saved Vocabulary Bank, Reading History, Favorites |
 | **Phase 10** | **SEO, Accessibility & Performance** | PENDING | Metadata, JSON-LD Schemas, Sitemap, WCAG 2.1 AA Audit, Web Vitals |
