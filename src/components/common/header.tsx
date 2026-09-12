@@ -31,28 +31,28 @@ export async function Header() {
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground">
             <Link
               href="/"
-              className="transition-colors hover:text-foreground text-foreground"
+              className="transition-colors hover:text-foreground"
             >
               Trang chủ
             </Link>
             <Link
-              href="/#categories"
+              href="/articles"
+              className="transition-colors hover:text-foreground"
+            >
+              Bài viết
+            </Link>
+            <Link
+              href="/categories"
               className="transition-colors hover:text-foreground"
             >
               Chuyên mục
-            </Link>
-            <Link
-              href="/#cefr"
-              className="transition-colors hover:text-foreground"
-            >
-              Cấp độ CEFR
             </Link>
           </nav>
         </div>
 
         {/* Right Action Icons & Session Controls */}
         <div className="flex items-center gap-3">
-          <Link href="/#search" aria-label="Tìm kiếm bài viết">
+          <Link href="/articles" aria-label="Tìm kiếm bài viết">
             <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
               <Search className="h-5 w-5" />
             </Button>

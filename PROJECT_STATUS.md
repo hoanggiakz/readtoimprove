@@ -63,9 +63,24 @@ Current Status: COMPLETED (Phase 4 Verified & Reported; Ready for Phase 5)
 
 ---
 
+- **PHASE 05 — PUBLIC DISCOVERY & CONTENT BROWSING** (Completed: 2026-09-12)
+  - Public data-access service `src/lib/articles.ts` with authoritative where clause (`status === PUBLISHED && publishedAt <= now`)
+  - Zod search parameter validation `src/validations/public.ts` (min 2 chars, strict CEFR enum)
+  - Dynamic Homepage (`/`) with Hero Spotlight, CEFR pills, Category filter bar, and latest articles stream
+  - Reusable Article Catalog (`/articles`) with multi-dimensional filtering, active filter summary chips, and pagination
+  - Public Article Landing (`/articles/[slug]`) with SEO metadata, bilingual preview, attribution, and 404 guard
+  - Category Directory (`/categories`) and dedicated Category Stream (`/categories/[slug]`)
+  - 8 reusable public UI components in `src/components/public/`
+  - Automated verification suite `scripts/verify-public.ts` (20/20 PASS)
+  - Full regression pass: `verify-db.ts` (10/10), `verify-auth.ts` (10/10), `verify-admin.ts` (20/20), `verify-public.ts` (20/20)
+  - Static typecheck, ESLint, and Next.js production build (`18 routes`) all PASS
+  - Phase 5 Report: [docs/phases/PHASE_05_REPORT.md](file:///d:/readtoimprove/docs/phases/PHASE_05_REPORT.md)
+
+---
+
 ## Current Phase
 - **PHASE 05 — PUBLIC DISCOVERY & CONTENT BROWSING**
-  - Status: `WAIT` (Awaiting approval to begin Phase 5 planning)
+  - Status: `COMPLETED` (Verified & Reported; Ready for Phase 6)
 
 ---
 
@@ -74,4 +89,4 @@ Current Status: COMPLETED (Phase 4 Verified & Reported; Ready for Phase 5)
 
 ---
 
-Last Updated: 2026-09-11
+Last Updated: 2026-09-12
