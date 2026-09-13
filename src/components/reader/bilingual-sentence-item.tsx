@@ -22,6 +22,9 @@ interface BilingualSentenceItemProps {
   fontSize: ReaderFontSize;
   isActive: boolean;
   onActivate: () => void;
+  isSaved?: (vocabId: string) => boolean;
+  onToggleSave?: (vocabId: string) => Promise<void>;
+  isAuthenticated?: boolean;
 }
 
 export function BilingualSentenceItem({
@@ -30,6 +33,9 @@ export function BilingualSentenceItem({
   fontSize,
   isActive,
   onActivate,
+  isSaved,
+  onToggleSave,
+  isAuthenticated = false,
 }: BilingualSentenceItemProps) {
   const [activeHighlight, setActiveHighlight] = useState<HighlightMetadata | null>(null);
   const [isRevealed, setIsRevealed] = useState(false);
@@ -140,6 +146,9 @@ export function BilingualSentenceItem({
                   vocabulary={vocab}
                   onClose={() => setActiveHighlight(null)}
                   triggerRef={activeTriggerRef}
+                  isSaved={isSaved ? isSaved(vocab.id) : false}
+                  onToggleSave={onToggleSave ? () => onToggleSave(vocab.id) : undefined}
+                  isAuthenticated={isAuthenticated}
                 />
               )}
             </span>

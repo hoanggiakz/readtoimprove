@@ -3,7 +3,8 @@
 ## Current Status
 - PHASE: 07 — Vocabulary & Personal Word Bank
 - STATUS: WAIT
-- LAST_UPDATED: 2026-09-13T12:52:00Z
+- RESULT: PASS
+- LAST_UPDATED: 2026-09-13T13:20:00Z
 - BRANCH: master
 
 ## Completed Phases
@@ -14,7 +15,7 @@
 - [x] Phase 4 — Private Admin CMS (artifact: `/docs/phases/PHASE_04_REPORT.md`, commit: `9fc0c92`)
 - [x] Phase 5 — Public Discovery & Content Browsing (artifact: `/docs/phases/PHASE_05_REPORT.md`, commit: `fbaa6e7`)
 - [x] Phase 6 — Article Reading Experience (artifact: `/docs/phases/PHASE_06_REPORT.md`, commit: `b73de4d`)
-- [ ] Phase 7 — Vocabulary & Personal Word Bank (PLAN completed: `/docs/phases/PHASE_07_IMPLEMENTATION_PLAN.md`, awaiting user approval)
+- [x] Phase 7 — Vocabulary & Personal Word Bank (artifact: `/docs/phases/PHASE_07_REPORT.md`, verification: 35/35 pass, regression: 121/121 pass)
 
 ## Architecture Decisions (ADR)
 - **ADR-001**: Signed cryptographic JWT sessions via `jose` + bcrypt password hashing + PostgreSQL session verification (`auth()`, `requireAuth()`, `requireAdmin()`).
@@ -24,10 +25,12 @@
 - **ADR-005**: Pure algorithmic sentence slicing engine (`src/lib/sentence-slicer.ts`) enforcing `startOffset ASC, endOffset ASC` with overlap skipping to guarantee 100% character fidelity without HTML injection.
 - **ADR-006**: Authoritative public article visibility rule (`status === PUBLISHED && publishedAt !== null && publishedAt <= now`), throwing Next.js `notFound()` (404) on unpublished, draft, or future content.
 - **ADR-007**: SSR-safe reader hydration defaults (`translationMode = ALL`, `fontSize = MEDIUM`) to ensure full search crawler indexing and eliminate hydration mismatches, with client synchronization via `localStorage` post-mount.
-- **ADR-008**: Zero database migrations for Phase 7; reusing existing `UserSavedVocabulary` model with `[userId, vocabularyId]` unique constraint for atomic upsert and delete operations.
+- **ADR-008**: UserSavedVocabulary model reused; addition of PostgreSQL `pg_trgm` extension and GIN indexes on `Vocabulary(word)` and `Vocabulary(meaningVi)` for sub-100ms ILIKE search performance.
+- **ADR-009**: Explicit intent architecture for vocabulary save/unsave (`saveVocabularyAction` + `unsaveVocabularyAction`) eliminating check-then-act race conditions; tag-based revalidation via `revalidateTag`.
+- **ADR-010**: Constant 3-query architecture for personal Word Bank page eliminating N+1 queries; batch-lookup of saved IDs on reader load.
 
 ## Database Schema Version
-- Last migration: `20260911131715_init_schema`
+- Last migration: `20260913130000_add_trigram_search`
 - Seed version: v1 (Original educational content seeder in `prisma/seed.ts`)
 
 ## API Contract Version
@@ -35,9 +38,8 @@
 - Last breaking change: none
 
 ## Known Issues / Tech Debt
-- None. All 5 regression verification suites (`verify-db.ts`, `verify-auth.ts`, `verify-admin.ts`, `verify-public.ts`, `verify-reader.ts`), `typecheck`, `lint`, and Next.js production `build` pass with 100% success.
+- None. All 6 regression verification suites (`verify-db.ts`, `verify-auth.ts`, `verify-admin.ts`, `verify-public.ts`, `verify-reader.ts`, `verify-word-bank.ts` - 121 tests total), `typecheck`, `lint`, and Next.js production `build` pass with 100% success.
 
 ## Next Phase
-- PHASE 07 — Vocabulary & Personal Word Bank
-- Implementation Plan: `/docs/phases/PHASE_07_IMPLEMENTATION_PLAN.md`
-- Status: Awaiting user approval (`APPROVE PHASE 7`)
+- PHASE 08 — Search & Filter (Global Full-text Article Search, Combined Filters, Autocomplete)
+- Status: Awaiting user approval (`APPROVE PHASE 8`)

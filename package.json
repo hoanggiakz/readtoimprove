@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@prisma/client": "^6.4.1",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.38.4",
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

@@ -152,6 +152,8 @@ model Vocabulary {
   @@index([word])
   @@index([normalizedLemma])
   @@index([cefrLevel])
+  @@index([word(ops: raw("gin_trgm_ops"))], type: Gin, map: "Vocabulary_word_trgm_idx")
+  @@index([meaningVi(ops: raw("gin_trgm_ops"))], type: Gin, map: "Vocabulary_meaningVi_trgm_idx")
 }
 
 model SentenceVocabulary {

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BookOpen, Search, User, LogOut } from "lucide-react";
+import { BookOpen, Search, User, LogOut, Bookmark } from "lucide-react";
 import { ThemeToggle } from "@/components/common/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/auth";
@@ -47,6 +47,15 @@ export async function Header() {
             >
               Chuyên mục
             </Link>
+            {session && (
+              <Link
+                href="/word-bank"
+                className="transition-colors hover:text-foreground inline-flex items-center gap-1 font-medium text-primary"
+              >
+                <Bookmark className="w-3.5 h-3.5" />
+                <span>Sổ từ vựng</span>
+              </Link>
+            )}
           </nav>
         </div>
 
@@ -63,6 +72,11 @@ export async function Header() {
           {/* User Session State */}
           {session ? (
             <div className="flex items-center gap-2 border-l pl-3">
+              <Link href="/word-bank" className="sm:hidden" aria-label="Sổ từ vựng">
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" title="Sổ từ vựng">
+                  <Bookmark className="h-4 w-4" />
+                </Button>
+              </Link>
               <div className="hidden sm:flex items-center gap-2">
                 <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">
                   <User className="h-3.5 w-3.5" />

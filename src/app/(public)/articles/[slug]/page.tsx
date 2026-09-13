@@ -4,6 +4,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { getPublicArticleBySlug } from '@/lib/articles';
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 import { CefrBadge } from '@/components/ui/cefr-badge';
 import { ReadingProgressBar } from '@/components/reader/reading-progress-bar';
 import { BilingualSentenceList } from '@/components/reader/bilingual-sentence-list';
@@ -68,6 +70,31 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
 
   if (!article) {
     notFound();
+  }
+
+  // Check authenticated user session to retrieve personal saved vocabulary status
+  const session = await auth();
+  let initialSavedVocabIds: string[] = [];
+
+  if (session?.user?.id) {
+    const articleVocabIds = Array.from(
+      new Set(
+        article.sentences.flatMap((s) =>
+          s.vocabularies.map((v) => v.vocabulary?.id).filter(Boolean)
+        )
+      )
+    ) as string[];
+
+    if (articleVocabIds.length > 0) {
+      const savedRecords = await prisma.userSavedVocabulary.findMany({
+        where: {
+          userId: session.user.id,
+          vocabularyId: { in: articleVocabIds },
+        },
+        select: { vocabularyId: true },
+      });
+      initialSavedVocabIds = savedRecords.map((r) => r.vocabularyId);
+    }
   }
 
   const formattedDate = article.publishedAt
@@ -257,7 +284,11 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
 
         {/* 5. INTERACTIVE BILINGUAL READING EXPERIENCE */}
         <main id="article-reader-content" className="space-y-6 pt-2">
-          <BilingualSentenceList sentences={sentencesDTO} />
+          <BilingualSentenceList
+            sentences={sentencesDTO}
+            initialSavedVocabIds={initialSavedVocabIds}
+            isAuthenticated={!!session?.user?.id}
+          />
         </main>
 
         {/* 6. EDUCATIONAL FAIR USE NOTICE & FOOTER ATTRIBUTION */}

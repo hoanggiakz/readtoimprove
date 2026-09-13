@@ -10,20 +10,32 @@ import {
   BilingualSentenceItem,
   SentenceDTO,
 } from '@/components/reader/bilingual-sentence-item';
+import { saveVocabularyAction, unsaveVocabularyAction } from '@/lib/actions/vocabulary';
 import { BookOpen } from 'lucide-react';
 
 interface BilingualSentenceListProps {
   sentences: SentenceDTO[];
+  initialSavedVocabIds?: string[];
+  isAuthenticated?: boolean;
 }
 
 const STORAGE_TRANSLATION_KEY = 'readtoimprove:translation-mode';
 const STORAGE_FONT_KEY = 'readtoimprove:reader-font-size';
 
-export function BilingualSentenceList({ sentences }: BilingualSentenceListProps) {
+export function BilingualSentenceList({
+  sentences,
+  initialSavedVocabIds = [],
+  isAuthenticated = false,
+}: BilingualSentenceListProps) {
   // Initial SSR state defaults to ALL and MEDIUM to guarantee full indexability and avoid hydration mismatch
   const [translationMode, setTranslationMode] = useState<TranslationMode>('ALL');
   const [fontSize, setFontSize] = useState<ReaderFontSize>('MEDIUM');
   const [activeSentenceId, setActiveSentenceId] = useState<string | null>(null);
+
+  // In-memory set of saved vocabulary IDs for this user
+  const [savedVocabIds, setSavedVocabIds] = useState<Set<string>>(
+    () => new Set(initialSavedVocabIds)
+  );
 
   // Sync preference from localStorage after initial hydration
   useEffect(() => {
@@ -57,6 +69,29 @@ export function BilingualSentenceList({ sentences }: BilingualSentenceListProps)
       localStorage.setItem(STORAGE_FONT_KEY, size);
     } catch {
       // Ignore storage errors
+    }
+  };
+
+  const handleToggleSave = async (vocabularyId: string) => {
+    const isCurrentlySaved = savedVocabIds.has(vocabularyId);
+    const nextSet = new Set(savedVocabIds);
+
+    // Optimistic UI update
+    if (isCurrentlySaved) {
+      nextSet.delete(vocabularyId);
+    } else {
+      nextSet.add(vocabularyId);
+    }
+    setSavedVocabIds(nextSet);
+
+    // Dispatch explicit server action based on prior state (race-free)
+    const action = isCurrentlySaved ? unsaveVocabularyAction : saveVocabularyAction;
+    const result = await action({ vocabularyId });
+
+    if (!result.success) {
+      // Rollback on server rejection
+      setSavedVocabIds(new Set(savedVocabIds));
+      console.error('Failed to update saved vocabulary status:', result.message);
     }
   };
 
@@ -98,6 +133,9 @@ export function BilingualSentenceList({ sentences }: BilingualSentenceListProps)
             fontSize={fontSize}
             isActive={activeSentenceId === sentence.id}
             onActivate={() => setActiveSentenceId(sentence.id)}
+            isSaved={(vocabId) => savedVocabIds.has(vocabId)}
+            onToggleSave={handleToggleSave}
+            isAuthenticated={isAuthenticated}
           />
         ))}
       </section>

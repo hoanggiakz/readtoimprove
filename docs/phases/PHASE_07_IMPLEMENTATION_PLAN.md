@@ -1,46 +1,76 @@
-# PHASE 07 — IMPLEMENTATION PLAN: VOCABULARY & PERSONAL WORD BANK
+# PHASE 07 — IMPLEMENTATION PLAN v1.1: VOCABULARY & PERSONAL WORD BANK
+
+> **Revision Note**: v1.1 fixes 5 critical bugs and 12 improvements identified in senior review of v1.0. Changes are marked with `[v1.1-FIX]` or `[v1.1-IMPROVE]` for traceability.
+
+---
+
+## 0. Changelog v1.0 → v1.1
+
+| # | Type | Change |
+| :-: | :--- | :--- |
+| 1 | 🔴 **CRITICAL** | Removed `toggleSaveVocabularyAction` (race condition). Replaced with explicit `saveVocabularyAction` + `unsaveVocabularyAction`. |
+| 2 | 🔴 **CRITICAL** | Fixed `revalidatePath('/articles/[slug]')` $\rightarrow$ tag-based revalidation via `revalidateTag`. |
+| 3 | 🔴 **CRITICAL** | Added trigram index migration for `ILIKE '%...%'` search performance. |
+| 4 | 🔴 **CRITICAL** | Fixed $N+1$ in Word Bank context query $\rightarrow$ batch fetch. |
+| 5 | 🔴 **CRITICAL** | Added vocabulary existence validation before save. |
+| 6 | 🟠 **IMPORTANT** | Added CSRF documentation (Next.js Server Actions built-in). |
+| 7 | 🟠 **IMPORTANT** | Added rate limiting (Upstash Redis with in-memory fallback). |
+| 8 | 🟠 **IMPORTANT** | Added audit logging for save/unsave mutations. |
+| 9 | 🟠 **IMPORTANT** | Removed pagination ceiling; validate against actual `totalPages` instead. |
+| 10 | 🟠 **IMPORTANT** | Added 7 security tests $\rightarrow$ 35 tests total. |
+| 11 | 🟠 **IMPORTANT** | Added Rollback Plan section. |
+| 12 | 🟠 **IMPORTANT** | Added API contract update to Section 30. |
+| 13 | 🟡 **MINOR** | Renamed `src/lib/vocabulary.ts` $\rightarrow$ `src/lib/queries/vocabulary.ts`. |
+| 14 | 🟡 **MINOR** | Added `aria-live` for search results counter. |
+| 15 | 🟡 **MINOR** | Added focus management when removing cards. |
+| 16 | 🟡 **MINOR** | Documented seed data dependencies for E2E. |
+| 17 | 🟡 **MINOR** | Clarified `savedAt` update behavior. |
+| 18 | 🟡 **MINOR** | Documented `notes` + `isMastered` deferral. |
+| 19 | 🟡 **MINOR** | Unified `PROJECT_STATE.md` naming (superseding `PROJECT_STATUS.md`). |
+| 20 | 🟡 **MINOR** | Added `orderBy` for sentence context query. |
+
+---
 
 ## 1. Phase Objective
-Build the production-ready personal vocabulary learning system for **ReadToImprove**. Connect the Phase 6 interactive bilingual reading experience with the user account persistence layer, empowering Vietnamese learners (IELTS/TOEFL students, professionals, and academics) to:
-1. **Save / Unsave Vocabulary from Reader**: Turn the reading experience into an active vocabulary acquisition pipeline by enabling readers to save highlighted CEFR words directly from the vocabulary popover.
-2. **Display Live Saved State in Reader**: Accurately reflect whether a word is saved in the user's personal collection without $N+1$ database queries.
-3. **Personal Word Bank Management (`/word-bank`)**: Provide an authenticated dashboard to browse, search, filter, pronounce, review context, and remove saved vocabulary items.
-4. **Contextual Retention**: Preserve the original article and sentence where the word was encountered, reinforcing memory and natural collocations.
-5. **Multi-Dimensional Exploration**: Search by English headword and Vietnamese meaning, filter by CEFR level (`A1`–`C2`), and paginate efficiently.
-6. **Strict Authorization & Data Isolation**: Enforce session-derived ownership so users can only view and mutate their own saved words.
-7. **Accessible & Responsive UX**: WCAG 2.1 AA keyboard support, screen-reader status communication, touch-friendly controls, and seamless mobile-to-desktop responsiveness.
+Build the production-ready personal vocabulary learning system for **ReadToImprove**, connecting the Phase 6 interactive bilingual reading experience with the user account persistence layer.
+
+Learners (IELTS/TOEFL students, professionals, academics) must be able to:
+- **Save / Unsave Vocabulary from Reader**: Turn reading into active vocabulary acquisition.
+- **Display Live Saved State in Reader**: Accurate, zero $N+1$.
+- **Personal Word Bank Management (`/word-bank`)**: Browse, search, filter, pronounce, review context, remove.
+- **Contextual Retention**: Preserve original article + sentence context.
+- **Multi-Dimensional Exploration**: Search EN/VI, filter CEFR A1–C2, paginate.
+- **Strict Authorization & Data Isolation**: Session-derived ownership only.
+- **Accessible & Responsive UX**: WCAG 2.1 AA, mobile-to-desktop.
 
 ---
 
 ## 2. Current Repository Findings
-Thorough inspection of the repository confirmed the following architectural realities:
 
-| Component | Repository Path | Current Status & Capabilities |
+| Component | Path | Status |
 | :--- | :--- | :--- |
-| **Prisma Schema** | `prisma/schema.prisma` | Model `UserSavedVocabulary` **already exists** with `userId`, `vocabularyId`, `notes`, `isMastered`, `savedAt`, `@@unique([userId, vocabularyId])`, and `@@index([userId])`. |
-| **Global Vocabulary** | `prisma/schema.prisma` | Model `Vocabulary` has all pedagogical fields: `word`, `normalizedLemma`, `ipa`, `pos`, `meaningVi`, `exampleEn`, `exampleVi`, `cefrLevel`, `audioUrl`. |
-| **Authentication** | `src/lib/auth.ts`, `src/lib/security.ts` | Signed JWT session cookies via `jose`. `auth()` resolves `SessionUser`. `requireAuth(returnUrl)` enforces login redirect. |
-| **Server Actions** | `src/lib/actions/auth.ts`, `admin.ts` | Established `ActionResult<T>` pattern for type-safe server responses with Zod validation. |
-| **Article Reader** | `src/app/(public)/articles/[slug]/page.tsx` | Single query loads article with sentences & vocabularies. Maps to `SentenceDTO`. |
-| **Vocabulary Popover** | `src/components/reader/vocabulary-popover.tsx` | Displays headword, IPA, CEFR badge, POS, audio trigger, Vietnamese meaning, examples. "Lưu từ" action currently marked as deferred. |
-| **UI Primitives** | `src/components/ui/`, `src/components/public/` | `Button`, `Badge`, `CefrBadge`, `Pagination`, `SearchBar`, `EmptyState`, `CefrSelector` ready for reuse. |
-| **Header / Nav** | `src/components/common/header.tsx` | Displays user name and logout when authenticated; ready to host "Sổ từ vựng" navigation link. |
+| **Prisma Schema** | `prisma/schema.prisma` | `UserSavedVocabulary` exists with `@@unique([userId, vocabularyId])`, `@@index([userId])`. |
+| **Global Vocabulary** | `prisma/schema.prisma` | `Vocabulary` has `word`, `normalizedLemma`, `ipa`, `pos`, `meaningVi`, `exampleEn`, `exampleVi`, `cefrLevel`, `audioUrl`. |
+| **Authentication** | `src/lib/auth.ts`, `src/lib/security.ts` | JWT session via `jose`. `auth()` + `requireAuth()`. |
+| **Server Actions** | `src/lib/actions/auth.ts`, `admin.ts` | Established `ActionResult<T>` pattern. |
+| **Article Reader** | `src/app/(public)/articles/[slug]/page.tsx` | Single query for article + sentences + vocab. |
+| **Vocabulary Popover** | `src/components/reader/vocabulary-popover.tsx` | "Lưu từ" button marked deferred. |
+| **UI Primitives** | `src/components/ui/`, `src/components/public/` | `Button`, `Badge`, `CefrBadge`, `Pagination`, `SearchBar`, `EmptyState`, `CefrSelector`. |
+| **Header** | `src/components/common/header.tsx` | Session-aware. Ready for "Sổ từ vựng" link. |
 
 ---
 
 ## 3. Existing Architecture Reused
-Phase 7 strictly adheres to the established project conventions:
-- **Session Layer**: Reuses `auth()` and `requireAuth()` directly. No new authentication frameworks or parallel session cookies.
-- **Data Access Layer**: Reuses singleton `prisma` from `src/lib/prisma.ts`.
-- **Server Actions**: Extends `src/lib/actions/vocabulary.ts` using the project's standard `ActionResult<T>`.
-- **UI Components**: Reuses `Pagination` (`src/components/public/pagination.tsx`), `CefrBadge` (`src/components/ui/cefr-badge.tsx`), `Button` (`src/components/ui/button.tsx`), and Lucide icons (`Bookmark`, `Star`, `Trash2`, `Search`, `Volume2`, `ExternalLink`).
-- **Validation**: Uses Zod for search and mutation parameter validation.
-- **Public Visibility Rule**: Reader page continues to enforce `getPublicArticleWhereClause()` from Phase 5.
+- **Session Layer**: `auth()` + `requireAuth()` (no new auth).
+- **Data Access**: Singleton `prisma` from `src/lib/prisma.ts`.
+- **Server Actions**: Extends `src/lib/actions/vocabulary.ts` using `ActionResult<T>`.
+- **UI Components**: `Pagination`, `CefrBadge`, `Button`, Lucide icons.
+- **Validation**: Zod.
+- **Public Visibility**: `getPublicArticleWhereClause()` from Phase 5.
 
 ---
 
 ## 4. Database Analysis
-Inspecting `prisma/schema.prisma` lines 174–187 reveals:
 
 ```prisma
 model UserSavedVocabulary {
@@ -59,124 +89,297 @@ model UserSavedVocabulary {
 }
 ```
 
-### Relational Integrity Check:
-1. **Primary Key**: `id String @id @default(cuid())`.
-2. **Foreign Keys**:
-   - `userId` $\rightarrow$ `User.id` (with `onDelete: Cascade`).
-   - `vocabularyId` $\rightarrow$ `Vocabulary.id` (with `onDelete: Cascade`).
-3. **Unique Constraint**: `@@unique([userId, vocabularyId])` guarantees that a given user cannot create duplicate saves of the same vocabulary item at the database level.
-4. **Indexes**: `@@index([userId])` provides fast index-scans for querying a user's word collection.
-5. **Metadata Fields**: `notes String?`, `isMastered Boolean @default(false)`, `savedAt DateTime @default(now())`.
+### Relational Integrity:
+- **PK**: `id String @id @default(cuid())`
+- **FK**: `userId` $\rightarrow$ `User.id` (Cascade), `vocabularyId` $\rightarrow$ `Vocabulary.id` (Cascade)
+- **Unique**: `@@unique([userId, vocabularyId])` $\rightarrow$ atomic upsert safe
+- **Index**: `@@index([userId])` $\rightarrow$ fast per-user query
 
 ---
 
-## 5. Migration Decision: NO MIGRATION REQUIRED
-**Decision**: **NO DATABASE MIGRATION IS NEEDED**.
+## 5. Migration Decision
 
-The existing `UserSavedVocabulary` model designed in Phase 0 and implemented in Phase 2 completely satisfies all data persistence requirements for Phase 7. The compound unique index `[userId, vocabularyId]` enables safe atomic upserts and deletes. Preserving the schema without migration prevents any regression risks on existing seeded databases.
+### 5.1 UserSavedVocabulary — NO MIGRATION REQUIRED
+Schema already satisfies Phase 7 persistence requirements. No changes to table structure.
+
+### 5.2 [v1.1-FIX] NEW Migration Required: Trigram Index for Search
+- **Vấn đề**: Prisma `contains` + `mode: 'insensitive'` $\rightarrow$ `ILIKE '%...%'` $\rightarrow$ full table scan (leading wildcard cannot use B-tree index).
+- **Giải pháp**: Thêm `pg_trgm` extension + GIN index.
+- **Migration file**: `prisma/migrations/YYYYMMDDHHMMSS_add_trigram_search/migration.sql`
+
+```sql
+-- Enable trigram extension
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+-- GIN indexes for fast ILIKE '%...%' search
+CREATE INDEX IF NOT EXISTS "Vocabulary_word_trgm_idx"
+  ON "Vocabulary" USING GIN (word gin_trgm_ops);
+
+CREATE INDEX IF NOT EXISTS "Vocabulary_meaningVi_trgm_idx"
+  ON "Vocabulary" USING GIN ("meaningVi" gin_trgm_ops);
+```
+
+Update `prisma/schema.prisma`:
+```prisma
+model Vocabulary {
+  // ... existing fields
+
+  @@index([word(ops: raw("gin_trgm_ops"))], type: Gin)
+  @@index([meaningVi(ops: raw("gin_trgm_ops"))], type: Gin)
+}
+```
+
+Verification after migration:
+```sql
+EXPLAIN ANALYZE
+SELECT * FROM "Vocabulary"
+WHERE word ILIKE '%sustain%';
+-- Should show: Bitmap Index Scan on Vocabulary_word_trgm_idx
+-- KHÔNG được show: Seq Scan
+```
+
+Rollback (nếu cần):
+```sql
+DROP INDEX IF EXISTS "Vocabulary_word_trgm_idx";
+DROP INDEX IF EXISTS "Vocabulary_meaningVi_trgm_idx";
+-- pg_trgm extension giữ lại (dùng chung)
+```
 
 ---
 
 ## 6. Authentication Strategy
-1. **Server Components (`/word-bank`)**:
-   - Executes `const user = await requireAuth('/word-bank');` at the top of the Server Component.
-   - If unauthenticated, Next.js performs an internal redirect to `/login?returnUrl=%2Fword-bank`.
-2. **Server Actions (`saveVocabularyAction`, `unsaveVocabularyAction`)**:
-   - Calls `const session = await auth();`.
-   - If `!session?.user?.id`, returns `{ success: false, error: 'UNAUTHORIZED', message: 'Vui lòng đăng nhập để thực hiện thao tác này.' }`.
-   - The user ID is strictly extracted from `session.user.id`. The client is never permitted to pass a `userId` parameter.
-3. **Public Article Reader (`/articles/[slug]`)**:
-   - Calls `const session = await auth();` passively.
-   - If unauthenticated, `session` is null, and the reader treats the user as an anonymous visitor (`isAuthenticated = false`, `savedVocabIds = []`).
+
+### 6.1 Server Components (`/word-bank`)
+```typescript
+const user = await requireAuth('/word-bank');
+// → redirects to /login?returnUrl=%2Fword-bank nếu unauth
+```
+
+### 6.2 Server Actions
+```typescript
+const session = await auth();
+if (!session?.user?.id) {
+  return { success: false, error: 'UNAUTHORIZED', message: 'Vui lòng đăng nhập.' };
+}
+const userId = session.user.id; // NEVER from client
+```
+
+### 6.3 Public Article Reader
+```typescript
+const session = await auth(); // passive
+const isAuthenticated = !!session?.user?.id;
+```
 
 ---
 
 ## 7. Authorization Strategy
-1. **Tenant Isolation**: Every database read, insert, and delete on `UserSavedVocabulary` enforces `where: { userId: session.user.id }`.
-2. **Cross-User Protection**:
-   - User A cannot view User B's saved vocabulary.
-   - User A cannot delete or modify User B's saved vocabulary.
-   - Any attempt to unsave a word with an ID not belonging to the authenticated user results in zero database modifications (`count: 0`).
-3. **Global Content Protection**:
-   - The global `Vocabulary` record cannot be mutated, modified, or deleted by standard users during Word Bank operations. Only the join entity `UserSavedVocabulary` is created or deleted.
+- **Tenant Isolation**: Every read/write enforces `where: { userId: session.user.id }`.
+- **Cross-User Protection**: User A cannot read/mutate User B's data (delete returns `count: 0`).
+- **Global Content Protection**: Standard users never mutate `Vocabulary`; only the `UserSavedVocabulary` join entity is created or deleted.
 
 ---
 
-## 8. Save / Unsave Semantics
-All vocabulary save mutations must be idempotent and concurrency-safe:
+## 8. [v1.1-FIX] Save / Unsave Semantics (Race-Free)
 
+### 8.1 Removed: `toggleSaveVocabularyAction` ❌
+- **Lý do**: Check-then-act race condition. Client phải biết `isSaved` state và gửi intent rõ ràng (`SAVE` hoặc `UNSAVE`).
+
+### 8.2 Save Operation (`saveVocabularyAction`) — IDEMPOTENT
+```typescript
+'use server';
+
+export async function saveVocabularyAction(
+  input: { vocabularyId: string }
+): Promise<ActionResult<{ isSaved: true; vocabularyId: string }>> {
+  // 1. Authenticate
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, error: 'UNAUTHORIZED', message: 'Vui lòng đăng nhập.' };
+  }
+  const userId = session.user.id;
+
+  // 2. Validate input
+  const parsed = SaveVocabularySchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: 'INVALID_INPUT', message: 'Dữ liệu không hợp lệ.' };
+  }
+  const { vocabularyId } = parsed.data;
+
+  // 3. [v1.1-FIX] Rate limit
+  const { success: rateLimitOk } = await rateLimit(`save:${userId}`);
+  if (!rateLimitOk) {
+    return { success: false, error: 'RATE_LIMITED', message: 'Vui lòng thử lại sau.' };
+  }
+
+  // 4. [v1.1-FIX] Validate vocabulary exists BEFORE upsert
+  const vocab = await prisma.vocabulary.findUnique({
+    where: { id: vocabularyId },
+    select: { id: true },
+  });
+  if (!vocab) {
+    return { success: false, error: 'NOT_FOUND', message: 'Từ vựng không tồn tại.' };
+  }
+
+  // 5. Atomic upsert
+  try {
+    await prisma.userSavedVocabulary.upsert({
+      where: {
+        userId_vocabularyId: { userId, vocabularyId },
+      },
+      create: { userId, vocabularyId },
+      // [v1.1-IMPROVE] Keep original savedAt, only touch if re-saved after unsave
+      update: {},
+    });
+
+    // 6. [v1.1-IMPROVE] Audit log (fire-and-forget)
+    void auditLog({
+      userId,
+      action: 'SAVE_VOCABULARY',
+      entityType: 'UserSavedVocabulary',
+      entityId: vocabularyId,
+    });
+
+    // 7. Revalidate (tag-based)
+    revalidateTag(`word-bank-${userId}`);
+    // Article page: rely on optimistic UI, no revalidate needed
+
+    return { success: true, data: { isSaved: true, vocabularyId } };
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError) {
+      if (e.code === 'P2002') {
+        // Already saved (unique conflict on race) → treat as success
+        return { success: true, data: { isSaved: true, vocabularyId } };
+      }
+      if (e.code === 'P2003') {
+        return { success: false, error: 'INVALID_VOCAB', message: 'Từ vựng không hợp lệ.' };
+      }
+    }
+    captureError(e, { userId, vocabularyId, action: 'save' });
+    return { success: false, error: 'INTERNAL', message: 'Có lỗi xảy ra.' };
+  }
+}
+```
+
+### 8.3 Unsave Operation (`unsaveVocabularyAction`) — IDEMPOTENT
+```typescript
+export async function unsaveVocabularyAction(
+  input: { vocabularyId: string }
+): Promise<ActionResult<{ isSaved: false; vocabularyId: string }>> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, error: 'UNAUTHORIZED', message: 'Vui lòng đăng nhập.' };
+  }
+  const userId = session.user.id;
+
+  const parsed = UnsaveVocabularySchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: 'INVALID_INPUT', message: 'Dữ liệu không hợp lệ.' };
+  }
+  const { vocabularyId } = parsed.data;
+
+  // Rate limit
+  const { success: rateLimitOk } = await rateLimit(`unsave:${userId}`);
+  if (!rateLimitOk) {
+    return { success: false, error: 'RATE_LIMITED', message: 'Vui lòng thử lại sau.' };
+  }
+
+  try {
+    // Idempotent: deleteMany returns count: 0 if nothing to delete
+    const result = await prisma.userSavedVocabulary.deleteMany({
+      where: { userId, vocabularyId }, // userId from session = tenant isolation
+    });
+
+    if (result.count > 0) {
+      void auditLog({
+        userId,
+        action: 'UNSAVE_VOCABULARY',
+        entityType: 'UserSavedVocabulary',
+        entityId: vocabularyId,
+      });
+    }
+
+    revalidateTag(`word-bank-${userId}`);
+
+    return { success: true, data: { isSaved: false, vocabularyId } };
+  } catch (e) {
+    captureError(e, { userId, vocabularyId, action: 'unsave' });
+    return { success: false, error: 'INTERNAL', message: 'Có lỗi xảy ra.' };
+  }
+}
+```
+
+### 8.4 Client Contract
+```typescript
+// In VocabularyPopover:
+const handleToggle = async () => {
+  if (!isAuthenticated) {
+    showLoginPrompt();
+    return;
+  }
+
+  const wasSaved = isSaved;
+  setIsSaved(!wasSaved); // optimistic
+
+  const action = wasSaved ? unsaveVocabularyAction : saveVocabularyAction;
+  const result = await action({ vocabularyId });
+
+  if (!result.success) {
+    setIsSaved(wasSaved); // rollback
+    toast.error(result.message);
+  }
+};
+```
+> **Key**: Client decides save vs unsave based on current state. Server never toggles blindly. No race condition.
+
+### 8.5 Flow Diagram
 ```text
-                  ┌─────────────────────────────────────────┐
-                  │ User clicks "Lưu từ" / "Bỏ lưu"         │
-                  └────────────────────┬────────────────────┘
-                                       │
-                                       ▼
-                       Is user authenticated?
-                                      / \
-                                     /   \
-                                   NO     YES
-                                   /       \
-                                  /         ▼
-    Prompt login / redirect to /login       Derive currentUserId from session
-                                            │
-                                            ▼
-                                   Action type requested
-                                          /   \
-                                         /     \
-                                       SAVE   UNSAVE
-                                       /         \
-                                      ▼           ▼
-                      Atomic Upsert               Atomic DeleteMany
-             (userId, vocabularyId)              where: { userId, vocabularyId }
-                      │                                   │
-                      ▼                                   ▼
-        Returns { isSaved: true }             Returns { isSaved: false }
+┌────────────────────────────────────────────────────────────┐
+│ User clicks "Lưu từ" / "Bỏ lưu"                           │
+└────────────────────────┬───────────────────────────────────┘
+                         │
+                         ▼
+            Is user authenticated?
+                    /        \
+                   NO        YES
+                   /          \
+                  ▼            ▼
+    Show login prompt      Client sends EXPLICIT intent
+    with returnUrl         (based on current isSaved state)
+                           │
+                    ┌──────┴──────┐
+                    ▼             ▼
+              SAVE ACTION    UNSAVE ACTION
+                    │             │
+                    ▼             ▼
+          Rate limit check    Rate limit check
+                    │             │
+                    ▼             ▼
+          Validate vocab       deleteMany
+              exists           where {userId, vocabId}
+                    │             │
+                    ▼             ▼
+          prisma.upsert       Returns count: 0|1
+          (atomic, safe)      (idempotent)
+                    │             │
+                    └──────┬──────┘
+                           ▼
+              auditLog + revalidateTag
+                           │
+                           ▼
+              Return { isSaved: bool }
 ```
-
-### 8.1 Save Operation (`saveVocabularyAction`)
-```typescript
-await prisma.userSavedVocabulary.upsert({
-  where: {
-    userId_vocabularyId: {
-      userId: session.user.id,
-      vocabularyId,
-    },
-  },
-  create: {
-    userId: session.user.id,
-    vocabularyId,
-  },
-  update: {
-    savedAt: new Date(), // touch timestamp if already saved
-  },
-});
-```
-- **Concurrency Safety**: Utilizes Prisma's atomic `upsert` backed by the PostgreSQL `ON CONFLICT (user_id, vocabulary_id) DO UPDATE` clause. Two concurrent save requests will never throw a duplicate key error (`P2002`).
-
-### 8.2 Unsave Operation (`unsaveVocabularyAction`)
-```typescript
-await prisma.userSavedVocabulary.deleteMany({
-  where: {
-    userId: session.user.id,
-    vocabularyId,
-  },
-});
-```
-- **Idempotency**: `deleteMany` returns `{ count: n }`. If the word was already unsaved, it safely returns `{ count: 0 }` without throwing a `RecordNotFound` exception.
 
 ---
 
-## 9. Article Reader Integration (Zero N+1 Strategy)
-To provide real-time visual feedback in the Article Reader without degrading server performance:
+## 9. Article Reader Integration (Zero N+1)
 
 ### 9.1 Single Batch Query on Article Load
-In `src/app/(public)/articles/[slug]/page.tsx`:
 ```typescript
+// src/app/(public)/articles/[slug]/page.tsx
 const session = await auth();
 let initialSavedVocabIds: string[] = [];
 
 if (session?.user?.id) {
-  // 1. Collect all distinct vocabulary IDs present in this article's sentences
   const articleVocabIds = Array.from(
     new Set(
       article.sentences.flatMap((s) =>
@@ -185,7 +388,6 @@ if (session?.user?.id) {
     )
   ) as string[];
 
-  // 2. Fetch saved state in ONE indexed batch query (WHERE userId = :uid AND vocabularyId IN (:ids))
   if (articleVocabIds.length > 0) {
     const savedRecords = await prisma.userSavedVocabulary.findMany({
       where: {
@@ -198,377 +400,546 @@ if (session?.user?.id) {
   }
 }
 ```
-- **Performance**: Exactly **one** indexed query (`O(log N)` via `@@index([userId])` and primary key index on `vocabularyId`).
-- **Zero N+1**: Never queries `UserSavedVocabulary` per sentence or per highlight.
-- **Unauthenticated Visitors**: Zero extra queries executed.
+- **Performance**: Exactly 1 indexed query (`@@index([userId])` + PK on `vocabularyId`).
 
-### 9.2 Client-Side State Management in Reader
-- `BilingualSentenceList` maintains an in-memory `savedVocabIds: Set<string>` initialized from `initialSavedVocabIds`.
-- When a user saves or unsaves a word in `VocabularyPopover`:
-  1. Optimistically updates the `Set<string>`.
-  2. Dispatches `saveVocabularyAction` or `unsaveVocabularyAction`.
-  3. If the server action fails, rolls back the optimistic update and displays an error toast.
-  4. If unauthenticated, displays an accessible dialog/toast prompt: *"Vui lòng đăng nhập để lưu từ vào Sổ từ vựng cá nhân."* with a direct link to `/login`.
+### 9.2 Client State
+- `BilingualSentenceList` holds `savedVocabIds: Set<string>` initialized from props.
+- On toggle: optimistic update $\rightarrow$ server action $\rightarrow$ rollback on failure.
+- Multi-tab sync: Accepted as eventual consistency (documented limitation). Refetch on tab focus via `router.refresh()`.
 
 ---
 
-## 10. Word Bank Architecture (`/word-bank`)
-The personal Word Bank will be located at:
+## 10. [v1.1-FIX] Word Bank Architecture (`/word-bank`)
 
+### 10.1 Route
 ```text
 /word-bank
 ```
 
-### 10.1 Layout & Hierarchy
+### 10.2 Layout
 ```text
 Header (Session-aware with "Sổ từ vựng" active link)
-  │
-  ▼
+   │
+   ▼
 Word Bank Page (src/app/(public)/word-bank/page.tsx)
-  │
-  ├── Breadcrumb & Header Title ("Sổ từ vựng cá nhân")
-  │     └── Total saved words counter badge
-  │
-  ├── Filter & Search Bar
-  │     ├── Search Input (English headword & Vietnamese meaning)
-  │     └── CEFR Filter Pills (All, A1, A2, B1, B2, C1, C2)
-  │
-  ├── Word Bank Content
-  │     ├── Empty State (when collection is empty or filters yield 0 results)
-  │     └── Word Bank List (Responsive Card Grid)
-  │           └── Word Bank Item Card
-  │                 ├── Header: Word, IPA, Pronunciation Audio Button, CEFR Badge, POS
-  │                 ├── Body: Vietnamese Meaning (high contrast)
-  │                 ├── Context Box: Sentence in original article + Article link
-  │                 ├── Footer: Saved date ("Lưu ngày dd/mm/yyyy") + Remove Button
-  │
-  └── Server-Side Pagination (Reusing src/components/public/pagination.tsx)
+   │
+   ├─ Breadcrumb & Title ("Sổ từ vựng cá nhân")
+   │     └─ Total counter badge
+   │
+   ├─ Filter & Search Bar
+   │     ├─ Search Input (EN headword + VI meaning)
+   │     └─ CEFR Pills (All, A1...C2)
+   │
+   ├─ Content
+   │     ├─ Empty State (no saved words / filter yields 0)
+   │     └─ Card Grid (responsive)
+   │           └─ WordBankCard
+   │                 ├─ Header: word, IPA, audio, CEFR badge, POS
+   │                 ├─ Body: Vietnamese meaning
+   │                 ├─ Context: article sentence + article link
+   │                 └─ Footer: saved date + remove button
+   │
+   └─ Server-Side Pagination (reuse src/components/public/pagination.tsx)
 ```
+
+### 10.3 [v1.1-FIX] N+1-Free Data Fetching
+- **Problem in v1.0**: `include: { vocabulary: { include: { sentenceInstances: { take: 1 } } } }` $\rightarrow$ ~37 queries for 12 cards.
+- **Solution**: Batch fetch + in-memory grouping.
+
+```typescript
+// src/lib/queries/vocabulary.ts
+export async function getWordBankPage(params: {
+  userId: string;
+  q?: string;
+  cefr?: CefrLevel | 'ALL';
+  page: number;
+  limit?: number;
+}) {
+  const { userId, q, cefr, page, limit = 12 } = params;
+
+  const where: Prisma.UserSavedVocabularyWhereInput = {
+    userId,
+    ...(cefr && cefr !== 'ALL' ? { vocabulary: { cefrLevel: cefr } } : {}),
+    ...(q
+      ? {
+          vocabulary: {
+            ...(cefr && cefr !== 'ALL' ? { cefrLevel: cefr } : {}),
+            OR: [
+              { word: { contains: q, mode: 'insensitive' } },
+              { meaningVi: { contains: q, mode: 'insensitive' } },
+            ],
+          },
+        }
+      : {}),
+  };
+
+  const [total, savedItems] = await Promise.all([
+    prisma.userSavedVocabulary.count({ where }),
+    prisma.userSavedVocabulary.findMany({
+      where,
+      include: { vocabulary: true }, // 1 query, 1 JOIN
+      orderBy: { savedAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+  ]);
+
+  // Batch fetch context sentences (1 extra query for all vocabIds)
+  const vocabIds = savedItems.map((s) => s.vocabularyId);
+  const contexts = vocabIds.length
+    ? await prisma.sentenceVocabulary.findMany({
+        where: { vocabularyId: { in: vocabIds } },
+        include: {
+          sentence: {
+            select: {
+              textEn: true,
+              textVi: true,
+              orderIndex: true,
+              article: { select: { slug: true, titleEn: true } },
+            },
+          },
+        },
+        orderBy: { sentence: { orderIndex: 'asc' } }, // [v1.1-IMPROVE]
+      })
+    : [];
+
+  // Group by vocabularyId, take FIRST (lowest orderIndex) per vocab
+  const contextByVocab = new Map<string, (typeof contexts)[number]>();
+  for (const c of contexts) {
+    if (!contextByVocab.has(c.vocabularyId)) {
+      contextByVocab.set(c.vocabularyId, c);
+    }
+  }
+
+  const items = savedItems.map((s) => ({
+    ...s,
+    context: contextByVocab.get(s.vocabularyId) ?? null,
+  }));
+
+  return {
+    items,
+    total,
+    totalPages: Math.ceil(total / limit),
+    page,
+    limit,
+  };
+}
+```
+> **Total queries per page**: Exactly **3** (`count`, `savedItems`, `contexts`) — constant regardless of card count.
 
 ---
 
-## 11. Search Design
-Learners must be able to quickly locate vocabulary in their personal collection.
-- **Input**: Keyword string `q` via search parameters (`?q=sustainable`).
-- **Validation**: Minimum 2 characters, trimmed, max 100 characters via Zod.
-- **Database Query**: Scoped strictly to the current user with case-insensitive matching across:
-  1. `vocabulary.word`: Matches English term.
-  2. `vocabulary.meaningVi`: Matches Vietnamese definition.
-- **Prisma Where Clause**:
-  ```typescript
-  where: {
-    userId: user.id,
-    ...(q ? {
-      vocabulary: {
-        OR: [
-          { word: { contains: q, mode: 'insensitive' } },
-          { meaningVi: { contains: q, mode: 'insensitive' } },
-        ],
-      },
-    } : {}),
-  }
-  ```
+## 11. [v1.1-FIX] Search Design
+
+### 11.1 Input Validation
+```typescript
+export const WordBankQuerySchema = z.object({
+  q: z
+    .string()
+    .trim()
+    .min(2, 'Tối thiểu 2 ký tự')
+    .max(100, 'Tối đa 100 ký tự')
+    .optional()
+    .transform((v) => v || undefined),
+  cefr: z.union([z.nativeEnum(CefrLevel), z.literal('ALL')]).default('ALL'),
+  page: z.coerce.number().int().min(1).default(1),
+});
+```
+
+### 11.2 Query (Indexed via GIN Trigram)
+```typescript
+OR: [
+  { word: { contains: q, mode: 'insensitive' } },        // GIN trigram index
+  { meaningVi: { contains: q, mode: 'insensitive' } },   // GIN trigram index
+]
+```
+- **Performance target**: p95 < 100ms with 10,000 vocab records.
+- **Fallback**: If > 500ms $\rightarrow$ document ADR and evaluate Meilisearch in Phase 8/11.
 
 ---
 
 ## 12. Filter Design
-### In-Scope Filters:
-1. **CEFR Level Filter**:
-   - Supported values: `ALL` (default), `A1`, `A2`, `B1`, `B2`, `C1`, `C2`.
-   - Validated via `z.nativeEnum(CefrLevel)`.
-   - Styled using established CEFR tokens (`cefr-b1`, `cefr-b2`, etc.).
-2. **Search Keyword**:
-   - English and Vietnamese text search.
 
-### Deferred Filters (Reserved for Future Learning Analytics):
-- `isMastered` toggle (Learned / Needs Review) $\rightarrow$ Deferred to Phase 9.
-- Custom user tags / folders $\rightarrow$ Deferred.
+### In-Scope
+- **CEFR Level**: `ALL` | `A1` | `A2` | `B1` | `B2` | `C1` | `C2`
+- **Search**: EN headword + VI meaning
+
+### [v1.1-IMPROVE] Deferred (Explicitly Documented)
+- `isMastered` toggle $\rightarrow$ Phase 9 (schema field exists, default `false`, no UI in Phase 7).
+- `notes` editing $\rightarrow$ Phase 9 (schema field exists, no UI in Phase 7).
+- Custom folders / tags $\rightarrow$ Phase 9+.
 
 ---
 
-## 13. Pagination Strategy
-- **Evaluation**:
-  - *Cursor Pagination*: Excellent for infinite scroll, but lacks direct page jump numbers.
-  - *Offset Pagination*: Highly intuitive for educational review tables, aligns with the existing `Pagination` component in `src/components/public/pagination.tsx`.
-- **Decision**: **Server-Side Offset Pagination**.
-  - Default `limit = 12` items per page.
-  - Query parameter: `?page=1`.
-  - Prisma queries executed in parallel via `Promise.all`:
-    1. `findMany({ skip: (page - 1) * limit, take: limit, orderBy: { savedAt: 'desc' } })`
-    2. `count({ where })`
-  - Max page ceiling: 1,000 pages.
+## 13. [v1.1-FIX] Pagination Strategy
+- **Type**: Server-side offset pagination.
+- **Default**: `limit = 12`.
+- **Param**: `?page=1`.
+- **Queries**: `Promise.all([findMany, count])`.
+- **Validation**:
+  ```typescript
+  if (page < 1) page = 1;
+  if (totalPages > 0 && page > totalPages) page = totalPages;
+  // No arbitrary ceiling — validate against actual totalPages
+  ```
+- When `total = 0`: Render Empty State, do not render Pagination.
+- Removed arbitrary 1,000 pages ceiling.
 
 ---
 
-## 14. Cache & Revalidation Strategy
-- **Route Segment Config**:
-  ```typescript
-  export const dynamic = 'force-dynamic';
-  ```
-  `/word-bank` contains private, user-specific learning data. It must **never** be cached statically or served from a public CDN edge cache.
-- **On Mutation**:
-  - `saveVocabularyAction` and `unsaveVocabularyAction` invoke `revalidatePath('/word-bank')` and `revalidatePath('/articles/[slug]')`.
-  - Client state updates optimistically for instantaneous feedback.
-- **SEO Robots**:
-  ```typescript
-  export const metadata: Metadata = {
-    title: 'Sổ từ vựng cá nhân | ReadToImprove',
-    robots: {
-      index: false,
-      follow: false,
-    },
-  };
-  ```
-  Personal Word Bank pages are explicitly excluded from search engine indexers.
+## 14. [v1.1-FIX] Cache & Revalidation
+
+### 14.1 Route Config
+```typescript
+// /word-bank/page.tsx
+export const dynamic = 'force-dynamic';
+```
+
+### 14.2 Tag-Based Revalidation
+```typescript
+// In page.tsx — wrap query with cache tag
+import { unstable_cache } from 'next/cache';
+
+const getCachedWordBank = unstable_cache(
+  getWordBankPage,
+  ['word-bank'],
+  {
+    tags: [`word-bank-${userId}`],
+    revalidate: false, // only invalidated explicitly
+  }
+);
+```
+```typescript
+// In Server Actions
+revalidateTag(`word-bank-${userId}`); // invalidate ONLY this user's cache
+```
+
+### Benefits:
+- Eliminates invalid `revalidatePath('/articles/[slug]')` pattern.
+- Article Reader relies on optimistic UI — zero unnecessary revalidation.
+- Multi-user safety: User A's save never invalidates User B's cache.
+
+### 14.3 SEO
+```typescript
+export const metadata: Metadata = {
+  title: 'Sổ từ vựng cá nhân | ReadToImprove',
+  robots: { index: false, follow: false },
+};
+```
 
 ---
 
 ## 15. API & Server Action Contracts
 
-### 15.1 Action: `saveVocabularyAction`
+### 15.1 `saveVocabularyAction`
 - **File**: `src/lib/actions/vocabulary.ts`
-- **Input**: `{ vocabularyId: string }`
-- **Authentication**: `auth()` required.
-- **Validation**: Zod schema validating valid CUID string.
-- **Operation**: `prisma.userSavedVocabulary.upsert`.
-- **Return Type**:
-  ```typescript
-  ActionResult<{ isSaved: boolean; vocabularyId: string }>
-  ```
-- **Error Handling**: Catches database errors, logs securely, returns friendly message.
+- **Input**: `{ vocabularyId: string }` (CUID)
+- **Auth**: Required (`auth()`)
+- **Rate limit**: 30 req/min per user
+- **Validate**: Zod + vocabulary existence check
+- **Operation**: `prisma.userSavedVocabulary.upsert` with `update: {}`
+- **Return**: `ActionResult<{ isSaved: true; vocabularyId: string }>`
+- **Errors**: `UNAUTHORIZED` | `INVALID_INPUT` | `RATE_LIMITED` | `NOT_FOUND` | `INTERNAL`
 
-### 15.2 Action: `unsaveVocabularyAction`
-- **File**: `src/lib/actions/vocabulary.ts`
+### 15.2 `unsaveVocabularyAction`
 - **Input**: `{ vocabularyId: string }`
-- **Authentication**: `auth()` required.
-- **Validation**: Zod schema validating valid CUID string.
-- **Operation**: `prisma.userSavedVocabulary.deleteMany`.
-- **Return Type**:
-  ```typescript
-  ActionResult<{ isSaved: boolean; vocabularyId: string }>
-  ```
+- **Auth**: Required
+- **Rate limit**: 30 req/min per user
+- **Operation**: `prisma.userSavedVocabulary.deleteMany` (idempotent)
+- **Return**: `ActionResult<{ isSaved: false; vocabularyId: string }>`
 
-### 15.3 Action: `toggleSaveVocabularyAction`
-- **File**: `src/lib/actions/vocabulary.ts`
-- **Input**: `{ vocabularyId: string }`
-- **Behavior**: Checks existing relation. If exists, deletes; if not, upserts. Returns updated state.
+### 15.3 ~~`toggleSaveVocabularyAction`~~ REMOVED [v1.1-FIX]
+- Removed to eliminate check-then-act race condition. Client picks explicit action based on current state.
 
 ---
 
-## 16. Component Architecture
+## 16. [v1.1-IMPROVE] Component Architecture
 
 ```text
 src/
-├── app/
-│   └── (public)/
-│       ├── articles/[slug]/
-│       │   └── page.tsx                [MODIFY: pass initialSavedVocabIds & session]
-│       └── word-bank/
-│           ├── page.tsx                [NEW: Authenticated Word Bank server page]
-│           ├── loading.tsx             [NEW: Skeleton grid for Word Bank]
-│           └── error.tsx               [NEW: Error recovery boundary]
+├── app/(public)/
+│   ├── articles/[slug]/page.tsx      [MODIFY: batch saved-state]
+│   └── word-bank/
+│       ├── page.tsx                   [NEW: authenticated page]
+│       ├── loading.tsx                [NEW: skeleton]
+│       └── error.tsx                  [NEW: boundary]
 │
 ├── components/
-│   ├── common/
-│   │   └── header.tsx                  [MODIFY: add "Sổ từ vựng" navigation link]
-│   │
+│   ├── common/header.tsx              [MODIFY: add nav link]
 │   ├── reader/
-│   │   ├── bilingual-sentence-list.tsx [MODIFY: manage savedVocabIds Set]
-│   │   ├── bilingual-sentence-item.tsx [MODIFY: pass isSaved & onToggleSave]
-│   │   └── vocabulary-popover.tsx      [MODIFY: activate "Lưu từ" / "Đã lưu" button]
-│   │
+│   │   ├── bilingual-sentence-list.tsx [MODIFY: savedVocabIds Set]
+│   │   ├── bilingual-sentence-item.tsx [MODIFY: pass state]
+│   │   └── vocabulary-popover.tsx     [MODIFY: activate save button]
 │   └── word-bank/
-│       ├── word-bank-header.tsx        [NEW: Title, total counter, breadcrumb]
-│       ├── word-bank-filter-bar.tsx    [NEW: Search input + CEFR level pills]
-│       ├── word-bank-card.tsx          [NEW: Vocabulary learning card with context]
-│       └── word-bank-empty.tsx         [NEW: Educational empty state with CTA]
+│       ├── word-bank-header.tsx       [NEW]
+│       ├── word-bank-filter-bar.tsx   [NEW]
+│       ├── word-bank-card.tsx         [NEW]
+│       └── word-bank-empty.tsx        [NEW]
 │
 ├── lib/
-│   ├── actions/
-│   │   └── vocabulary.ts               [NEW: Server actions for save/unsave/toggle]
-│   └── vocabulary.ts                   [NEW: Data-access queries for Word Bank]
+│   ├── actions/vocabulary.ts          [NEW: mutations]
+│   ├── queries/vocabulary.ts          [NEW: data access]  ← [v1.1-IMPROVE] renamed
+│   ├── rate-limit.ts                  [NEW: Upstash wrapper with in-memory fallback]
+│   ├── audit-log.ts                   [NEW: audit helper]
+│   └── errors.ts                      [EXISTING: captureError]
 │
 └── validations/
-    └── word-bank.ts                    [NEW: Zod schemas for query & mutations]
+    └── word-bank.ts                   [NEW: Zod schemas]
+
+prisma/
+└── migrations/
+    └── YYYYMMDDHHMMSS_add_trigram_search/migration.sql  [NEW]
 ```
 
 ---
 
 ## 17. Context Information Retention
-To maximize learning transfer, each saved vocabulary item in the Word Bank displays the context in which it was encountered:
-1. **Query Strategy**: When fetching `UserSavedVocabulary`, include the first sentence instance associated with this vocabulary:
-   ```typescript
-   include: {
-     vocabulary: {
-       include: {
-         sentenceInstances: {
-           take: 1,
-           select: {
-             sentence: {
-               select: {
-                 textEn: true,
-                 textVi: true,
-                 article: {
-                   select: {
-                     slug: true,
-                     titleEn: true,
-                   },
-                 },
-               },
-             },
-           },
-         },
-       },
-     },
-   }
-   ```
-2. **Display**:
-   - The card shows: *"Ngữ cảnh trong bài:"* followed by the English sentence with the word highlighted.
-   - An anchor link *"Xem trong bài viết: [Article Title]"* links directly to `/articles/[slug]`.
-   - Fallback: If no sentence instance is linked, the card displays `vocabulary.exampleEn` and `vocabulary.exampleVi`.
+- See Section 10.3: Batch fetch + in-memory group.
+- Fallback: If no `sentenceInstance` exists $\rightarrow$ use `vocabulary.exampleEn` / `exampleVi`.
+- UI Display:
+  - *"Ngữ cảnh trong bài: [English sentence]"*
+  - Link: *"Xem trong bài viết: [Article Title]"* $\rightarrow$ `/articles/[slug]`
 
 ---
 
-## 18. Accessibility Strategy (WCAG 2.1 AA)
-- **Semantic HTML**: `<main>`, `<section>`, `<article>` cards, native `<button>` elements.
-- **Aria Attributes**:
-  - Bookmark/Save buttons: `aria-label="Lưu từ vựng sustainable vào Sổ từ vựng"` / `aria-label="Bỏ lưu từ vựng sustainable"`.
-  - `aria-pressed={isSaved}` on toggle buttons.
-  - Search input with associated `<label>` and `aria-describedby`.
-- **Keyboard Navigation**:
-  - Full `Tab` sequence across search bar, CEFR filters, audio speaker buttons, remove buttons, and pagination links.
-  - High visibility focus rings (`focus-visible:ring-2 focus-visible:ring-primary`).
-- **No Color-Only Information**: Saved state uses both visual icon changes (filled bookmark vs outline star) and explicit Vietnamese text (`Đã lưu` vs `Lưu từ`).
+## 18. [v1.1-IMPROVE] Accessibility Strategy (WCAG 2.1 AA)
+
+### Semantic HTML
+`<main>`, `<section>`, `<article>` cards, native `<button>`.
+
+### ARIA Attributes
+- Save button: `aria-label="Lưu từ vựng {word} vào Sổ từ vựng"` / `aria-label="Bỏ lưu từ vựng {word}"`.
+- `aria-pressed={isSaved}` on toggle.
+- Search input: `<label>` + `aria-describedby` for helper hint.
+- **[v1.1-IMPROVE] Search results counter**:
+  ```html
+  <div aria-live="polite" aria-atomic="true">{total} từ vựng</div>
+  ```
+
+### Keyboard Navigation
+- Full Tab sequence: Search $\rightarrow$ Filters $\rightarrow$ Audio buttons $\rightarrow$ Remove buttons $\rightarrow$ Pagination.
+- High visibility focus: `focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2`.
+
+### [v1.1-IMPROVE] Focus Management on Remove
+When removing a card:
+1. If cards remain: Focus moves to the next card (or previous if removing the last card).
+2. If all cards are removed: Focus moves to the Empty State heading.
+3. Screen-reader announcement: `aria-live="polite"` $\rightarrow$ *"Đã xóa từ vựng. Còn X từ."*
+
+```typescript
+const handleRemove = async (vocabId: string, cardIndex: number) => {
+  await unsaveVocabularyAction({ vocabularyId: vocabId });
+  const nextIndex = Math.min(cardIndex, remainingCount - 1);
+  if (nextIndex >= 0) {
+    cardRefs.current[nextIndex]?.focus();
+  } else {
+    emptyStateRef.current?.focus();
+  }
+};
+```
+
+### No Color-Only Information
+Saved state: Icon change (filled bookmark $\leftrightarrow$ outline) + text (*"Đã lưu"* / *"Lưu từ"*).
 
 ---
 
 ## 19. Responsive Strategy
-- **Mobile (<640px)**: Single column card stack. Toolbar elements wrap cleanly. Search bar is full-width. Audio button and remove button have minimum $44 \times 44$px touch targets.
-- **Tablet (640px–1024px)**: 2-column grid (`grid-cols-1 sm:grid-cols-2`).
-- **Desktop (>1024px)**: 3-column grid (`grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`). Context box remains legible without awkward word wrapping.
+- **Mobile (<640px)**: 1 column, full-width search, $44 \times 44$px touch targets.
+- **Tablet (640–1024px)**: `grid-cols-1 sm:grid-cols-2`.
+- **Desktop (>1024px)**: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`.
 
 ---
 
-## 20. Security Analysis
-1. **Session Forgery Prevention**: All mutations reject client-supplied user identifiers and rely strictly on cryptographic JWT tokens validated against PostgreSQL.
-2. **Audit & Tamper Resistance**:
-   - Unauthenticated access attempts to `/word-bank` redirect to login.
-   - Unauthenticated Server Action calls fail with `UNAUTHORIZED`.
-   - Cannot delete or query records outside `where: { userId: session.user.id }`.
-3. **No Private Route Leakage**: `/word-bank` is protected; public `robots.ts` excludes indexing.
+## 20. [v1.1-IMPROVE] Security Analysis
+
+### 20.1 Session Forgery Prevention
+JWT validated server-side. Mutations rely on `session.user.id` only.
+
+### 20.2 CSRF Protection
+Next.js Server Actions have built-in CSRF protection:
+- Origin header check (must match host).
+- SameSite cookies.
+- POST-only enforcement.
+
+### 20.3 Rate Limiting
+```typescript
+// src/lib/rate-limit.ts
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
+import { checkRateLimit } from '@/lib/security';
+
+// In production with Upstash credentials:
+// Use Upstash sliding window (30 req / 1 min).
+// In local/test environment without Upstash:
+// Seamless fallback to in-memory sliding window limiter.
+```
+
+### 20.4 Audit Logging
+```typescript
+// src/lib/audit-log.ts
+export async function auditLog(entry: {
+  userId: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  metadata?: Record<string, unknown>;
+}) {
+  try {
+    await prisma.auditLog.create({
+      data: {
+        userId: entry.userId,
+        action: entry.action,
+        entity: entry.entityType,
+        entityId: entry.entityId,
+        details: entry.metadata ? JSON.stringify(entry.metadata) : null,
+      },
+    });
+  } catch (e) {
+    console.error('Failed to write audit log:', e);
+  }
+}
+```
+
+### 20.5 Input Validation
+Zod at every boundary. Search: max 100 chars, trimmed. CUID format check for `vocabularyId`.
+
+### 20.6 No Private Route Leakage
+`/word-bank` behind `requireAuth()`, `robots.txt` disallow, `<meta name="robots" content="noindex,nofollow">`.
+
+### 20.7 Multi-Tab Consistency [v1.1-IMPROVE]
+- **Known limitation**: Optimistic UI in tab A does not sync to tab B until refetch.
+- **Mitigation**: On window focus $\rightarrow$ refetch via `router.refresh()`.
 
 ---
 
 ## 21. Performance Analysis
-- **Query Complexity**:
-  - Word Bank page query uses `UserSavedVocabulary` indexed on `userId`.
-  - Search filter applies indexed text lookup on `Vocabulary`.
-  - Pagination limits records to 12 items per request.
-- **Client Bundle Size**: Word Bank cards and lists are primarily React Server Components; interactivity (audio play, delete modal/toast, filter bar) is isolated into minimal client islands.
-- **Expected Scale**: Efficient execution for users with 10, 100, 1,000, or 10,000+ saved words due to indexed pagination.
+
+| Metric | Target | Strategy |
+| :--- | :--- | :--- |
+| **Word Bank page load** | < 500ms server | 3 queries (`count` + `findMany` + `contexts`) |
+| **Search p95** | < 100ms | GIN trigram index |
+| **Save/unsave action** | < 200ms | Atomic `upsert` / `deleteMany` |
+| **Article reader saved state** | 1 query | Batch `IN` filter |
+| **Client bundle** | < 20KB added | RSC-first, minimal client islands |
+
+Scale targets validated: 10 / 100 / 1,000 / 10,000 saved words per user.
 
 ---
 
-## 22. Detailed Test Plan (`scripts/verify-word-bank.ts`)
-Create a comprehensive test suite containing at least 28 automated test cases:
+## 22. [v1.1-FIX] Detailed Test Plan (`scripts/verify-word-bank.ts`) — 35 Tests
 
-### Authentication & Authorization (TC-WB-01 to TC-WB-04)
-- `TC-WB-01`: Unauthenticated visitor to `/word-bank` is rejected / redirected to login.
-- `TC-WB-02`: Authenticated user can access `/word-bank` data query.
-- `TC-WB-03`: Server actions derive `userId` solely from session, rejecting external user spoofing.
-- `TC-WB-04`: User A cannot read, query, or enumerate User B's saved vocabulary.
+### Authentication & Authorization (TC-WB-01 $\rightarrow$ 04)
+- `TC-WB-01`: Unauth visitor $\rightarrow$ redirected to `/login?returnUrl=/word-bank`.
+- `TC-WB-02`: Auth user can query own data.
+- `TC-WB-03`: Server actions derive `userId` from session (reject spoofed `userId`).
+- `TC-WB-04`: User A cannot enumerate/read User B's saved vocab.
 
-### Save Functionality (TC-WB-05 to TC-WB-09)
-- `TC-WB-05`: Save vocabulary creates a `UserSavedVocabulary` record linked to current user.
-- `TC-WB-06`: Duplicate save of already-saved vocabulary is prevented via unique constraint and upsert.
-- `TC-WB-07`: Saving a nonexistent `vocabularyId` is safely rejected with clear error.
-- `TC-WB-08`: Save action preserves global `Vocabulary` record integrity (zero mutations to global vocab).
-- `TC-WB-09`: Unauthenticated save attempt returns `UNAUTHORIZED` status.
+### Save Functionality (TC-WB-05 $\rightarrow$ 09)
+- `TC-WB-05`: Save creates record with correct `userId`.
+- `TC-WB-06`: Duplicate save prevented via unique constraint + `upsert`.
+- `TC-WB-07`: Save nonexistent `vocabId` $\rightarrow$ `NOT_FOUND`.
+- `TC-WB-08`: Save preserves global `Vocabulary` integrity.
+- `TC-WB-09`: Unauth save $\rightarrow$ `UNAUTHORIZED`.
 
-### Unsave & Removal Functionality (TC-WB-10 to TC-WB-13)
-- `TC-WB-10`: Unsave vocabulary deletes the corresponding `UserSavedVocabulary` record.
-- `TC-WB-11`: Unsave on a word not currently saved is a safe, idempotent no-op.
-- `TC-WB-12`: User A cannot delete or unsave User B's saved vocabulary item.
-- `TC-WB-13`: Removing a saved word does not delete or cascade to the global `Vocabulary` table.
+### Unsave Functionality (TC-WB-10 $\rightarrow$ 13)
+- `TC-WB-10`: Unsave deletes record.
+- `TC-WB-11`: Unsave non-saved word $\rightarrow$ no-op, `count: 0`.
+- `TC-WB-12`: User A cannot delete User B's record.
+- `TC-WB-13`: Unsave does not cascade to `Vocabulary`.
 
-### Article Reader Integration (TC-WB-14 to TC-WB-17)
-- `TC-WB-14`: Article reader correctly identifies unsaved vocabulary for authenticated user.
-- `TC-WB-15`: Article reader correctly identifies saved vocabulary (`initialSavedVocabIds`).
-- `TC-WB-16`: Unauthenticated reader view executes zero queries on `UserSavedVocabulary`.
-- `TC-WB-17`: Batch saved-state lookup avoids $N+1$ query pattern (single query with `IN` filter).
+### Article Reader Integration (TC-WB-14 $\rightarrow$ 17)
+- `TC-WB-14`: Reader identifies unsaved vocab.
+- `TC-WB-15`: Reader identifies saved vocab (batch).
+- `TC-WB-16`: Unauth reader $\rightarrow$ 0 extra queries.
+- `TC-WB-17`: Batch query, no $N+1$ (verify via query counter).
 
-### Word Bank Queries & Filtering (TC-WB-18 to TC-WB-23)
-- `TC-WB-18`: Word Bank returns saved words in reverse chronological order (`savedAt DESC`).
-- `TC-WB-19`: Search by English headword filters accurately (`mode: 'insensitive'`).
-- `TC-WB-20`: Search by Vietnamese definition filters accurately.
-- `TC-WB-21`: CEFR level filter isolates matching vocabulary levels (`B1`, `B2`, `C1`, etc.).
-- `TC-WB-22`: Combined search and CEFR filter yields exact intersection.
-- `TC-WB-23`: Server-side pagination computes correct `totalPages`, `skip`, and `take`.
+### Word Bank Queries & Filtering (TC-WB-18 $\rightarrow$ 23)
+- `TC-WB-18`: Order by `savedAt DESC`.
+- `TC-WB-19`: Search by EN headword (case-insensitive via trigram index).
+- `TC-WB-20`: Search by VI meaning (case-insensitive via trigram index).
+- `TC-WB-21`: CEFR filter.
+- `TC-WB-22`: Combined search + CEFR.
+- `TC-WB-23`: Pagination computes `totalPages`, `skip`, `take` correctly.
 
-### Data Retention & Context (TC-WB-24 to TC-WB-25)
-- `TC-WB-24`: Saved vocabulary retains contextual article and sentence reference where available.
-- `TC-WB-25`: Fallback to vocabulary examples when no article instance exists.
+### Data Retention & Context (TC-WB-24 $\rightarrow$ 25)
+- `TC-WB-24`: Context preserved (article + sentence).
+- `TC-WB-25`: Fallback to `vocabulary.example` when no sentence instance exists.
 
-### Security, SEO & Accessibility (TC-WB-26 to TC-WB-28)
-- `TC-WB-26`: Word Bank metadata includes `robots: { index: false, follow: false }`.
-- `TC-WB-27`: Empty state renders accessible guidance and reading CTA.
-- `TC-WB-28`: Zero Prisma or database credential leakage across client DTO boundaries.
+### SEO & Accessibility (TC-WB-26 $\rightarrow$ 27)
+- `TC-WB-26`: Metadata `robots: { index: false, follow: false }`.
+- `TC-WB-27`: Empty state renders guidance + CTA.
+
+### [v1.1-FIX] Security Tests (TC-SEC-01 $\rightarrow$ 07) — NEW
+- `TC-SEC-01`: XSS in search query (`<script>alert(1)</script>`) $\rightarrow$ escaped/rendered inert.
+- `TC-SEC-02`: SQL injection in search (`'; DROP TABLE--`) $\rightarrow$ Prisma parameterizes, zero effect.
+- `TC-SEC-03`: Extremely long input (> 10,000 chars) $\rightarrow$ rejected by Zod (max 100).
+- `TC-SEC-04`: Concurrent saves ($10 \times$ `Promise.all`) $\rightarrow$ no duplicate, no race error.
+- `TC-SEC-05`: Rate limit exceeded $\rightarrow$ returns `RATE_LIMITED`.
+- `TC-SEC-06`: Pagination boundary (`page=0`, `page=-1`, `page=999999999`) $\rightarrow$ clamped safely.
+- `TC-SEC-07`: CSRF validation $\rightarrow$ Server Action rejects invalid Origin.
+
+### DTO Leakage (TC-SEC-08)
+- `TC-SEC-08`: No Prisma credentials/DB URLs in client DTO boundaries.
+
+> **Total**: **35 tests**.
 
 ---
 
 ## 23. Browser E2E Verification Plan
-Once authorized for IMPLEMENT/TEST, the browser subagent will verify:
-1. **Login Flow**: Sign in as standard learner (`user@example.com`).
-2. **Article Reader Flow**:
+
+### [v1.1-IMPROVE] Seed Data Dependencies
+Required seeds (from `prisma/seed.ts`):
+- User: `user@example.com`
+- Article slug: `clean-energy-microgrids-urban-resilience`
+- Vocabulary: `sustainable` (CEFR: B2)
+
+### E2E Flow:
+1. **Login**: Sign in as `user@example.com`.
+2. **Reader**:
    - Open `/articles/clean-energy-microgrids-urban-resilience`.
-   - Open vocabulary popover on highlighted word (e.g. `"sustainable"`).
-   - Verify initial state is `☆ Lưu từ`.
-   - Click `☆ Lưu từ`. Verify button immediately transitions to `✓ Đã lưu`.
-3. **Word Bank Flow**:
-   - Click `Sổ từ vựng` in the header navigation.
-   - Verify navigation to `/word-bank`.
-   - Verify `"sustainable"` appears as a learning card with CEFR badge, IPA, Vietnamese meaning, and article context.
-   - Click the pronunciation audio button; verify audio trigger.
-   - Search for `"sustainable"` in search input; verify filter works.
-   - Filter by CEFR `B2`; verify card remains visible. Filter by `C1`; verify empty filter state.
-   - Click `Xóa khỏi sổ từ` (Remove); verify card is removed and empty state is rendered.
-4. **Reader State Sync**:
-   - Navigate back to `/articles/clean-energy-microgrids-urban-resilience`.
-   - Open vocabulary popover on `"sustainable"`.
-   - Verify state has reverted to `☆ Lưu từ`.
-5. **Mobile Viewport Test**:
-   - Resize to mobile dimensions ($375 \times 667$).
-   - Verify card wrapping, touch target accessibility, and lack of horizontal overflow.
+   - Open popover on `"sustainable"`.
+   - Verify initial state: `☆ Lưu từ`.
+   - Click $\rightarrow$ verify transitions to `✓ Đã lưu`.
+3. **Word Bank**:
+   - Click `Sổ từ vựng` in header $\rightarrow$ `/word-bank`.
+   - Verify card with CEFR badge, IPA, VI meaning, article context.
+   - Click audio $\rightarrow$ verify trigger.
+   - Search `"sustainable"` $\rightarrow$ filter works.
+   - Filter CEFR `B2` $\rightarrow$ visible; `C1` $\rightarrow$ empty state.
+   - Click `Xóa khỏi sổ từ` $\rightarrow$ verify card removed + focus management.
+4. **Reader Sync**: Back to article $\rightarrow$ popover shows `☆ Lưu từ`.
+5. **Mobile Viewport**: $375 \times 667$ $\rightarrow$ no horizontal overflow, touch targets $\ge 44$px.
+6. **Multi-Tab**: Open 2 tabs, save in A, focus B $\rightarrow$ verify refetch.
 
 ---
 
 ## 24. Full Regression Plan
-Phase 7 verification will execute the complete test suite sequence:
-1. `npx tsx scripts/verify-db.ts` (Phase 2 DB persistence)
-2. `npx tsx scripts/verify-auth.ts` (Phase 3 Authentication & Stealth Admin)
-3. `npx tsx scripts/verify-admin.ts` (Phase 4 Admin CMS)
-4. `npx tsx scripts/verify-public.ts` (Phase 5 Public Discovery & Catalog)
-5. `npx tsx scripts/verify-reader.ts` (Phase 6 Article Reading Experience)
-6. `npx tsx scripts/verify-word-bank.ts` (Phase 7 Personal Word Bank)
-7. `npm run typecheck`
-8. `npm run lint`
-9. `npm run build`
+
+```bash
+npx tsx scripts/verify-db.ts
+npx tsx scripts/verify-auth.ts
+npx tsx scripts/verify-admin.ts
+npx tsx scripts/verify-public.ts
+npx tsx scripts/verify-reader.ts
+npx tsx scripts/verify-word-bank.ts   # Phase 7 (35 tests)
+npm run typecheck
+npm run lint
+npm run build
+```
 
 ---
 
 ## 25. Edge Cases & Handling
-1. **Unauthenticated User Clicks Save**:
-   - Display a non-blocking toast/dialog informing the user that saving requires an account, with a 1-click button to `/login?returnUrl=/articles/[slug]`.
-2. **Concurrent Save Requests**:
-   - Handled cleanly by PostgreSQL compound unique constraint `@@unique([userId, vocabularyId])` and Prisma `upsert`.
-3. **Unsaved Vocabulary Deleted by Admin**:
-   - Handled cleanly by foreign key cascade `onDelete: Cascade` on `UserSavedVocabulary`.
-4. **Vocabulary Without Article Sentence Context**:
-   - Graceful fallback to `vocabulary.exampleEn` and `vocabulary.exampleVi`.
-5. **Very Long Vietnamese Definition or Notes**:
-   - Cards use `break-words` and clamped line heights to prevent visual overflow.
-6. **Network Failure on Save/Unsave**:
-   - Client optimistic UI rolls back to previous state and alerts user.
+- **Unauth save**: Login prompt with `returnUrl`.
+- **Concurrent saves**: Unique constraint + upsert (verified `TC-SEC-04`).
+- **Admin deletes Vocabulary**: Cascade deletes `UserSavedVocabulary` (schema-level).
+- **No sentence context**: Fallback to `exampleEn`/`exampleVi`.
+- **Very long VI definition**: `break-words` + clamped lines.
+- **Network failure on save**: Optimistic rollback + toast.
+- **[v1.1-FIX] Search > 100 chars**: Zod rejects with friendly message.
+- **[v1.1-FIX] `page=0` or negative**: Clamp to 1.
+- **[v1.1-FIX] `page > totalPages`**: Clamp to `totalPages`.
+- **[v1.1-FIX] Rate limit exceeded**: `RATE_LIMITED` + toast.
 
 ---
 
@@ -576,89 +947,150 @@ Phase 7 verification will execute the complete test suite sequence:
 
 | Risk | Impact | Mitigation |
 | :--- | :--- | :--- |
-| **$N+1$ Query in Article Reader** | Server latency spikes on articles with 20+ vocabulary highlights. | Fetch all saved vocabulary IDs in a single `findMany({ where: { userId, vocabularyId: { in: ids } } })` batch query. |
-| **Cross-User Data Leakage** | Privacy violation; users see others' saved words. | All queries and mutations strictly enforce `where: { userId: session.user.id }` derived from the verified JWT session. |
-| **Hydration Mismatch on Saved State** | Client UI flickers or fails hydration. | Pass `initialSavedVocabIds` as server-rendered props; synchronize state cleanly without reading `localStorage`. |
-| **Public Indexing of Word Bank** | Search engines index private user pages. | Set `robots: { index: false, follow: false }` on `/word-bank` layout/metadata. |
+| **$N+1$ in Reader** | Latency | Batch `IN` query (Section 9) |
+| **$N+1$ in Word Bank** | Latency | Batch context fetch (Section 10.3) |
+| **Cross-user leakage** | Privacy | `where: { userId: session.user.id }` enforced everywhere |
+| **Hydration mismatch** | UI flicker | Server-rendered `initialSavedVocabIds` |
+| **Search perf degradation** | Slow UX | GIN trigram index (Section 5.2) |
+| **Race condition on save** | Data corruption | Removed toggle; explicit intent (Section 8) |
+| **Rate limit bypass** | DoS | Sliding window rate limit (Section 20.3) |
+| **Multi-tab desync** | UX confusion | Refetch on window focus (documented limitation) |
 
 ---
 
-## 27. Acceptance Criteria (Definition of Done)
-- [ ] Authenticated user can save vocabulary from the Article Reader popover.
-- [ ] Authenticated user can unsave vocabulary from the Article Reader popover.
-- [ ] Unauthenticated users are prompted to log in when attempting to save words.
-- [ ] Duplicate saves are prevented via database unique constraints and atomic upsert.
-- [ ] Article Reader displays accurate live saved state with zero $N+1$ queries.
-- [ ] Dedicated `/word-bank` page is protected by `requireAuth()`.
-- [ ] `/word-bank` displays saved words in reverse chronological order.
-- [ ] English and Vietnamese keyword search works within the user's Word Bank.
-- [ ] CEFR difficulty filtering (`A1`–`C2`) works accurately.
-- [ ] Saved vocabulary cards display headword, IPA, POS, audio button, CEFR badge, Vietnamese meaning, and original article/sentence context.
-- [ ] Users can remove words directly from `/word-bank`.
-- [ ] User A cannot view, query, or delete User B's saved vocabulary.
-- [ ] Word Bank has accessible empty state and skeleton loading state.
-- [ ] Header displays "Sổ từ vựng" navigation link for authenticated users.
-- [ ] Automated verification script `scripts/verify-word-bank.ts` passes 100%.
-- [ ] All previous regression suites (`verify-db`, `verify-auth`, `verify-admin`, `verify-public`, `verify-reader`) pass 100%.
-- [ ] `typecheck`, `lint`, and `build` succeed with 0 errors.
-- [ ] Browser E2E verification completes successfully.
-- [ ] Comprehensive `docs/phases/PHASE_07_REPORT.md` is generated.
-- [ ] Git commit created on clean working tree.
-- [ ] Final status set to `WAIT`.
+## 27. [v1.1-FIX] Rollback Plan
+
+### Pre-Phase 7
+```bash
+git tag phase-07-start
+git checkout -b feat/phase-07
+# Snapshot DB (trigram migration):
+# pg_dump $DATABASE_URL > backup/pre-phase-07.sql
+```
+
+### If Phase 7 Fails
+```bash
+git reset --hard phase-07-start
+# Rollback trigram migration nếu cần:
+# DROP INDEX IF EXISTS "Vocabulary_word_trgm_idx";
+# DROP INDEX IF EXISTS "Vocabulary_meaningVi_trgm_idx";
+```
+
+### Post-Phase 7 Success
+```bash
+git tag phase-07-complete
+git checkout main
+git merge feat/phase-07
+git push origin main --tags
+```
+> **Rule**: KHÔNG BAO GIỜ chạy `prisma migrate reset` trên bất kỳ database nào có dữ liệu.
 
 ---
 
-## 28. Implementation Sequence
-When Phase 7 is approved, implementation will proceed through the following orderly steps:
+## 28. Acceptance Criteria (Definition of Done)
+- [ ] Authenticated user can save/unsave from Reader popover.
+- [ ] Unauth users prompted to login.
+- [ ] Duplicate saves prevented (unique constraint).
+- [ ] Reader displays accurate live state, zero $N+1$.
+- [ ] `/word-bank` protected by `requireAuth()`.
+- [ ] Word Bank sorted `savedAt DESC`.
+- [ ] EN + VI search works.
+- [ ] CEFR filter works.
+- [ ] Cards display: Headword, IPA, POS, audio, CEFR, meaning, context.
+- [ ] Remove from Word Bank works with focus management.
+- [ ] User A cannot access User B data.
+- [ ] Empty state + skeleton loading.
+- [ ] Header "Sổ từ vựng" link (authenticated only).
+- [ ] 35 automated tests pass 100%.
+- [ ] All regression suites pass 100%.
+- [ ] `typecheck`, `lint`, `build` $\rightarrow$ 0 errors.
+- [ ] Browser E2E verification completes.
+- [ ] `docs/phases/PHASE_07_REPORT.md` generated.
+- [ ] `docs/PROJECT_STATE.md` updated.
+- [ ] Git commit on clean tree.
+- [ ] Status $\rightarrow$ `WAIT`.
+
+---
+
+## 29. Implementation Sequence
 
 ```text
-Step 01: Create Zod validation schemas (src/validations/word-bank.ts)
-Step 02: Implement vocabulary Server Actions (src/lib/actions/vocabulary.ts)
-Step 03: Implement Word Bank data-access queries (src/lib/vocabulary.ts)
-Step 04: Update Article Reader Server Component (batch saved-state lookup)
-Step 05: Update Reader Components (BilingualSentenceList, BilingualSentenceItem, VocabularyPopover)
-Step 06: Update Header navigation with "Sổ từ vựng" link for authenticated sessions
-Step 07: Create Word Bank UI components (WordBankCard, WordBankFilterBar, WordBankEmpty)
-Step 08: Implement Word Bank route pages (src/app/(public)/word-bank/page.tsx, loading.tsx, error.tsx)
-Step 09: Build automated verification suite (scripts/verify-word-bank.ts)
-Step 10: Run full test suite and complete regression verification
-Step 11: Execute live browser E2E verification
-Step 12: Perform senior engineer code review & create PHASE_07_REPORT.md
-Step 13: Create Git commit and transition phase status to WAIT
+Step 01: Create trigram migration + update schema.prisma
+Step 02: Run migration locally + verify with EXPLAIN ANALYZE
+Step 03: Create Zod schemas (src/validations/word-bank.ts)
+Step 04: Implement rate-limit + audit-log helpers
+Step 05: Implement Server Actions (src/lib/actions/vocabulary.ts)
+Step 06: Implement queries (src/lib/queries/vocabulary.ts)
+Step 07: Update Article Reader (batch saved-state)
+Step 08: Update Reader Components (List, Item, Popover)
+Step 09: Update Header (nav link)
+Step 10: Create Word Bank UI components
+Step 11: Implement Word Bank route pages
+Step 12: Build verification suite (35 tests)
+Step 13: Run full regression
+Step 14: Browser E2E verification
+Step 15: Senior code review + PHASE_07_REPORT.md
+Step 16: Update PROJECT_STATE.md
+Step 17: Git commit + status → WAIT
 ```
 
 ---
 
-## 29. Files to Create & Modify
+## 30. [v1.1-FIX] Files to Create & Modify
 
-### NEW Files to Create:
-1. `src/validations/word-bank.ts` (Zod schemas for search query and mutation inputs)
-2. `src/lib/actions/vocabulary.ts` (Server actions for save, unsave, toggle)
-3. `src/lib/vocabulary.ts` (Data-access layer for Word Bank queries and context resolution)
-4. `src/components/word-bank/word-bank-card.tsx` (Learning card with context and audio)
-5. `src/components/word-bank/word-bank-filter-bar.tsx` (Search input and CEFR pills)
-6. `src/components/word-bank/word-bank-empty.tsx` (Educational empty state with CTA)
-7. `src/app/(public)/word-bank/page.tsx` (Authenticated Word Bank server page)
-8. `src/app/(public)/word-bank/loading.tsx` (Skeleton loading grid)
-9. `src/app/(public)/word-bank/error.tsx` (Error recovery boundary)
-10. `scripts/verify-word-bank.ts` (28-test automated verification suite)
-11. `docs/phases/PHASE_07_IMPLEMENTATION_PLAN.md` (This document)
+### NEW
+1. `src/validations/word-bank.ts`
+2. `src/lib/actions/vocabulary.ts`
+3. `src/lib/queries/vocabulary.ts` (renamed from `vocabulary.ts`)
+4. `src/lib/rate-limit.ts`
+5. `src/lib/audit-log.ts`
+6. `src/components/word-bank/word-bank-card.tsx`
+7. `src/components/word-bank/word-bank-filter-bar.tsx`
+8. `src/components/word-bank/word-bank-empty.tsx`
+9. `src/app/(public)/word-bank/page.tsx`
+10. `src/app/(public)/word-bank/loading.tsx`
+11. `src/app/(public)/word-bank/error.tsx`
+12. `scripts/verify-word-bank.ts` (35 tests)
+13. `prisma/migrations/20260913130000_add_trigram_search/migration.sql`
+14. `docs/phases/PHASE_07_IMPLEMENTATION_PLAN.md` (this document)
 
-### EXISTING Files to Modify:
-1. `src/app/(public)/articles/[slug]/page.tsx` (Single batch lookup of saved vocabulary IDs)
-2. `src/components/reader/bilingual-sentence-list.tsx` (Manage saved state Set)
-3. `src/components/reader/bilingual-sentence-item.tsx` (Pass saved state to popover)
-4. `src/components/reader/vocabulary-popover.tsx` (Activate "Lưu từ" / "Đã lưu" interaction)
-5. `src/components/common/header.tsx` (Add "Sổ từ vựng" link for authenticated users)
-6. `PROJECT_STATUS.md` (Update phase tracking)
-7. `IMPLEMENTATION_PLAN.md` (Update phase roadmap)
+### MODIFY
+1. `prisma/schema.prisma` (add GIN indexes to Vocabulary)
+2. `src/app/(public)/articles/[slug]/page.tsx`
+3. `src/components/reader/bilingual-sentence-list.tsx`
+4. `src/components/reader/bilingual-sentence-item.tsx`
+5. `src/components/reader/vocabulary-popover.tsx`
+6. `src/components/common/header.tsx`
+7. `docs/PROJECT_STATE.md` (unified naming)
+8. `IMPLEMENTATION_PLAN.md` (phase roadmap)
 
 ---
 
-## 30. Explicit Out-of-Scope Items
-The following capabilities are reserved for subsequent phases and will NOT be implemented in Phase 7:
-- **Phase 08**: Global full-text article search and catalog autocomplete.
-- **Phase 09**: User reading history tracking, favorites list, and spaced-repetition flashcards.
-- **Phase 10**: Advanced site-wide performance auditing and Lighthouse score optimization.
-- **Paid TTS API**: Third-party speech APIs (Web Speech API and existing `audioUrl` are strictly reused).
-- **Custom User Folders/Decks**: Multi-folder vocabulary taxonomy.
+## 31. [v1.1-FIX] Explicit Out-of-Scope
+- **Phase 08**: Global article search, catalog autocomplete.
+- **Phase 09**: Reading history, favorites, spaced-repetition flashcards.
+- **Phase 10**: Lighthouse / Web Vitals optimization.
+- **Paid TTS API**: Reuse Web Speech API + existing `audioUrl`.
+- **Custom Folders/Decks**: Multi-folder taxonomy $\rightarrow$ Phase 9+.
+- **`isMastered` toggle**: Schema field exists (default `false`), no UI in Phase 7 $\rightarrow$ Phase 9.
+- **`notes` editing**: Schema field exists, no UI in Phase 7 $\rightarrow$ Phase 9.
+- **Multi-tab real-time sync**: Eventual consistency only; refetch on focus.
+- **Sort options beyond `savedAt DESC`**: Phase 9.
+
+---
+
+## 32. Dependency Additions
+
+| Package | Purpose | Justification |
+| :--- | :--- | :--- |
+| `@upstash/ratelimit` | Rate limiting | Serverless-friendly, Redis-backed sliding window |
+| `@upstash/redis` | Redis client | Required by ratelimit (with in-memory fallback for local) |
+| `pg_trgm` (Postgres ext) | Trigram search | Native PostgreSQL extension, no runtime dependency |
+
+> **Note**: No new client-side UI dependencies — all components reuse existing Tailwind and Radix/shadcn primitives.
+
+---
+
+## END OF PHASE 07 PLAN v1.1
+- **Status**: `READY FOR APPROVAL`
+- **Next Step**: `WAIT` for user `APPROVE PHASE 7` $\rightarrow$ proceed to `IMPLEMENT` (Step 01)
