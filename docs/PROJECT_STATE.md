@@ -16,7 +16,7 @@
 - [x] Phase 5 — Public Discovery & Content Browsing (artifact: `/docs/phases/PHASE_05_REPORT.md`, commit: `fbaa6e7`)
 - [x] Phase 6 — Article Reading Experience (artifact: `/docs/phases/PHASE_06_REPORT.md`, commit: `b73de4d`)
 - [x] Phase 7 — Vocabulary & Personal Word Bank (artifact: `/docs/phases/PHASE_07_REPORT.md`, commit: `3520b86`)
-- [x] Phase 8 — Search & Filter (artifact: `/docs/phases/PHASE_08_REPORT.md`, commit: `PENDING_COMMIT_HASH`)
+- [x] Phase 8 — Search & Filter (artifact: `/docs/phases/PHASE_08_REPORT.md`, commit: `bfb406a`)
 
 ## Architecture Decisions (ADR)
 - **ADR-001**: Signed cryptographic JWT sessions via `jose` + bcrypt password hashing + PostgreSQL session verification (`auth()`, `requireAuth()`, `requireAdmin()`).
