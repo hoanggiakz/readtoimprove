@@ -4,13 +4,15 @@ import Image from 'next/image';
 import { CefrBadge } from '@/components/ui/cefr-badge';
 import { PublicArticleSummary } from '@/lib/articles';
 import { Clock, Calendar, BookOpen } from 'lucide-react';
+import { SearchHighlight } from '@/components/search/search-highlight';
 
 interface ArticleCardProps {
   article: PublicArticleSummary;
   priority?: boolean;
+  searchQuery?: string;
 }
 
-export function ArticleCard({ article, priority = false }: ArticleCardProps) {
+export function ArticleCard({ article, priority = false, searchQuery }: ArticleCardProps) {
   const formattedDate = article.publishedAt
     ? new Intl.DateTimeFormat('vi-VN', {
         year: 'numeric',
@@ -74,21 +76,24 @@ export function ArticleCard({ article, priority = false }: ArticleCardProps) {
         <h3 className="font-semibold text-base leading-snug line-clamp-2 group-hover:text-primary transition-colors mb-1">
           <Link
             href={`/articles/${article.slug}`}
-            className="focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
+            className="focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary rounded"
           >
-            {article.titleEn}
+            <SearchHighlight text={article.titleEn} query={searchQuery} />
           </Link>
         </h3>
 
         {/* Vietnamese Title Subtitle */}
         <p className="text-xs text-muted-foreground line-clamp-1 italic mb-3 font-serif">
-          {article.titleVi}
+          <SearchHighlight text={article.titleVi} query={searchQuery} />
         </p>
 
         {/* Excerpt */}
         {(article.excerptEn || article.excerptVi) && (
           <p className="text-sm text-foreground/80 line-clamp-2 mb-4 flex-1">
-            {article.excerptEn || article.excerptVi}
+            <SearchHighlight
+              text={article.excerptEn || article.excerptVi || ''}
+              query={searchQuery}
+            />
           </p>
         )}
 

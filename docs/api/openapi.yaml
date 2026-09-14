@@ -1,0 +1,291 @@
+openapi: 3.1.0
+info:
+  title: ReadToImprove Discovery & Search API
+  version: 1.0.0
+  description: >
+    Public discovery and search API for the ReadToImprove bilingual English-Vietnamese
+    news reading and language acquisition platform.
+servers:
+  - url: http://localhost:3000
+    description: Local Development Server
+  - url: https://readtoimprove.com
+    description: Production Environment
+
+paths:
+  /api/search:
+    get:
+      summary: Search published bilingual articles
+      description: >
+        Performs hybrid full-text and trigram search across published articles
+        with optional category, CEFR level, and pagination filters.
+      operationId: searchArticles
+      tags:
+        - Search & Discovery
+      parameters:
+        - name: q
+          in: query
+          description: Search keywords across English/Vietnamese titles and excerpts
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+            example: renewable energy
+        - name: category
+          in: query
+          description: Filter by category slug
+          required: false
+          schema:
+            type: string
+            pattern: '^[a-z0-9-]*$'
+            example: technology
+        - name: level
+          in: query
+          description: Filter by European CEFR language proficiency level
+          required: false
+          schema:
+            type: string
+            enum: [A1, A2, B1, B2, C1, C2]
+            example: B2
+        - name: page
+          in: query
+          description: Page number for offset pagination
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+            example: 1
+        - name: limit
+          in: query
+          description: Number of articles returned per page (max 50)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 12
+            example: 12
+      responses:
+        '200':
+          description: Successfully retrieved paginated search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedSearchResult'
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded (60 requests/minute)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/search/suggestions:
+    get:
+      summary: Autocomplete search suggestions
+      description: >
+        Fast, debounced autocomplete suggestions returning top 5 matching articles
+        with category and CEFR level tags.
+      operationId: getSearchSuggestions
+      tags:
+        - Search & Discovery
+      parameters:
+        - name: q
+          in: query
+          description: Search keyword prefix (minimum 2 characters)
+          required: true
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 100
+            example: sustain
+      responses:
+        '200':
+          description: Successfully retrieved search suggestions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  suggestions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SearchSuggestionItem'
+                  query:
+                    type: string
+                required:
+                  - suggestions
+                  - query
+        '400':
+          description: Query string too short or malformed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded (120 requests/minute)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    CategorySummary:
+      type: object
+      properties:
+        id:
+          type: string
+        slug:
+          type: string
+        nameVi:
+          type: string
+        nameEn:
+          type: string
+      required:
+        - id
+        - slug
+        - nameVi
+        - nameEn
+
+    SearchResultItem:
+      type: object
+      properties:
+        id:
+          type: string
+        slug:
+          type: string
+        titleEn:
+          type: string
+        titleVi:
+          type: string
+        excerptEn:
+          type: string
+          nullable: true
+        excerptVi:
+          type: string
+          nullable: true
+        thumbnailUrl:
+          type: string
+          nullable: true
+        cefrLevel:
+          type: string
+          enum: [A1, A2, B1, B2, C1, C2]
+        readingTimeMinutes:
+          type: integer
+        publishedAt:
+          type: string
+          format: date-time
+          nullable: true
+        sourceName:
+          type: string
+        categories:
+          type: array
+          items:
+            type: object
+            properties:
+              category:
+                $ref: '#/components/schemas/CategorySummary'
+        _count:
+          type: object
+          properties:
+            sentences:
+              type: integer
+      required:
+        - id
+        - slug
+        - titleEn
+        - titleVi
+        - cefrLevel
+        - readingTimeMinutes
+        - sourceName
+        - categories
+        - _count
+
+    PaginatedSearchResult:
+      type: object
+      properties:
+        articles:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchResultItem'
+        totalCount:
+          type: integer
+        totalPages:
+          type: integer
+        currentPage:
+          type: integer
+        hasNextPage:
+          type: boolean
+        hasPrevPage:
+          type: boolean
+        activeQuery:
+          type: string
+        activeCategory:
+          type: string
+        activeCefrLevel:
+          type: string
+      required:
+        - articles
+        - totalCount
+        - totalPages
+        - currentPage
+        - hasNextPage
+        - hasPrevPage
+
+    SearchSuggestionItem:
+      type: object
+      properties:
+        id:
+          type: string
+        slug:
+          type: string
+        titleEn:
+          type: string
+        titleVi:
+          type: string
+        cefrLevel:
+          type: string
+          enum: [A1, A2, B1, B2, C1, C2]
+        readingTimeMinutes:
+          type: integer
+        primaryCategory:
+          $ref: '#/components/schemas/CategorySummary'
+          nullable: true
+      required:
+        - id
+        - slug
+        - titleEn
+        - titleVi
+        - cefrLevel
+        - readingTimeMinutes
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+      required:
+        - error
+        - message

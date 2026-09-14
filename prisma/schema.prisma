@@ -80,12 +80,17 @@ model Article {
   favorites           Favorite[]
   articleViews        ArticleView[]
 
+  searchVector        Unsupported("tsvector")?
+
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
 
   @@index([status, publishedAt])
   @@index([cefrLevel])
   @@index([slug])
+  @@index([titleEn(ops: raw("gin_trgm_ops"))], type: Gin, map: "Article_titleEn_trgm_idx")
+  @@index([titleVi(ops: raw("gin_trgm_ops"))], type: Gin, map: "Article_titleVi_trgm_idx")
+  @@index([excerptVi(ops: raw("gin_trgm_ops"))], type: Gin, map: "Article_excerptVi_trgm_idx")
 }
 
 model Category {

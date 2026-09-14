@@ -1,10 +1,10 @@
 # PROJECT STATE
 
 ## Current Status
-- PHASE: 07 — Vocabulary & Personal Word Bank
+- PHASE: 08 — Search & Filter (Global Discovery)
 - STATUS: WAIT
 - RESULT: PASS
-- LAST_UPDATED: 2026-09-13T13:20:00Z
+- LAST_UPDATED: 2026-09-14T21:45:00Z
 - BRANCH: master
 
 ## Completed Phases
@@ -16,6 +16,7 @@
 - [x] Phase 5 — Public Discovery & Content Browsing (artifact: `/docs/phases/PHASE_05_REPORT.md`, commit: `fbaa6e7`)
 - [x] Phase 6 — Article Reading Experience (artifact: `/docs/phases/PHASE_06_REPORT.md`, commit: `b73de4d`)
 - [x] Phase 7 — Vocabulary & Personal Word Bank (artifact: `/docs/phases/PHASE_07_REPORT.md`, commit: `3520b86`)
+- [x] Phase 8 — Search & Filter (artifact: `/docs/phases/PHASE_08_REPORT.md`, commit: `PENDING_COMMIT_HASH`)
 
 ## Architecture Decisions (ADR)
 - **ADR-001**: Signed cryptographic JWT sessions via `jose` + bcrypt password hashing + PostgreSQL session verification (`auth()`, `requireAuth()`, `requireAdmin()`).
@@ -28,18 +29,22 @@
 - **ADR-008**: UserSavedVocabulary model reused; addition of PostgreSQL `pg_trgm` extension and GIN indexes on `Vocabulary(word)` and `Vocabulary(meaningVi)` for sub-100ms ILIKE search performance.
 - **ADR-009**: Explicit intent architecture for vocabulary save/unsave (`saveVocabularyAction` + `unsaveVocabularyAction`) eliminating check-then-act race conditions; tag-based revalidation via `revalidateTag`.
 - **ADR-010**: Constant 3-query architecture for personal Word Bank page eliminating N+1 queries; batch-lookup of saved IDs on reader load.
+- **ADR-011**: Incremental OpenAPI 3.1 adoption (`docs/api/openapi.yaml`) initiated with Phase 8 discovery endpoints (`/api/search`, `/api/search/suggestions`), with backfill schedule for previous phases documented in `docs/api/README.md`.
+- **ADR-012**: Phase 0 documentation naming deviation: standardized on root `docs/00_DISCOVERY_AND_REQUIREMENTS.md` through `docs/05_RISKS_AMBIGUITIES_AND_DECISIONS.md` as primary BRD/FSD source of truth in place of `docs/phase-00/`.
 
 ## Database Schema Version
-- Last migration: `20260913130000_add_trigram_search`
+- Last migration: `20260914140000_add_article_full_text_search`
 - Seed version: v1 (Original educational content seeder in `prisma/seed.ts`)
 
 ## API Contract Version
-- Contract specification: Server Actions (`src/lib/actions/`) & Route Handlers (`src/app/api/`)
+- Contract specification: OpenAPI 3.1 (`docs/api/openapi.yaml`), Server Actions (`src/lib/actions/`), Route Handlers (`src/app/api/`)
 - Last breaking change: none
 
 ## Known Issues / Tech Debt
-- None. All 6 regression verification suites (`verify-db.ts`, `verify-auth.ts`, `verify-admin.ts`, `verify-public.ts`, `verify-reader.ts`, `verify-word-bank.ts` - 121 tests total), `typecheck`, `lint`, and Next.js production `build` pass with 100% success.
+- Upstash Redis rate limiter operates with in-memory sliding window fallback in local dev without Redis credentials.
+- External search engine (Meilisearch/Elasticsearch) migration deferred until catalog exceeds 10,000 articles and p95 search latency exceeds 200ms for 7 consecutive days.
+- All 7 regression verification suites (`verify-db.ts`, `verify-auth.ts`, `verify-admin.ts`, `verify-public.ts`, `verify-reader.ts`, `verify-word-bank.ts`, `verify-search.ts` — 153 tests total), `typecheck`, `lint`, and Next.js production `build` pass with 100% success.
 
 ## Next Phase
-- PHASE 08 — Search & Filter (Global Full-text Article Search, Combined Filters, Autocomplete)
-- Status: Awaiting user approval (`APPROVE PHASE 8`)
+- PHASE 09 — User Reading History & Progress Tracking
+- Status: Awaiting user approval (`APPROVE PHASE 9`)

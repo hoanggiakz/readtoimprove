@@ -169,16 +169,22 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
         {articles.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {articles.map((article) => (
-              <ArticleCard key={article.id} article={article} />
+              <ArticleCard
+                key={article.id}
+                article={article}
+                searchQuery={queryData.q}
+              />
             ))}
           </div>
         ) : (
           <EmptyState
             title="Không tìm thấy bài viết phù hợp"
             description={
-              hasActiveFilters
-                ? 'Không có bài viết nào khớp với tiêu chí tìm kiếm hoặc bộ lọc hiện tại của bạn. Vui lòng thử từ khóa khác hoặc xóa bộ lọc.'
-                : 'Hiện chưa có bài viết nào được xuất bản trong mục này.'
+              queryData.q
+                ? `Không có bài viết nào khớp với từ khóa "${queryData.q}". Vui lòng thử từ khóa ngắn hơn, chuyển sang tiếng Anh/tiếng Việt hoặc xóa bớt bộ lọc.`
+                : hasActiveFilters
+                  ? 'Không có bài viết nào khớp với tiêu chí bộ lọc hiện tại của bạn. Vui lòng chọn tiêu chí khác hoặc xóa bộ lọc.'
+                  : 'Hiện chưa có bài viết nào được xuất bản trong mục này.'
             }
             resetUrl="/articles"
             resetLabel="Xóa tất cả bộ lọc"

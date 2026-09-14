@@ -54,9 +54,12 @@ if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) 
 }
 
 /**
- * Rate limits vocabulary actions to 30 requests per minute per user.
+ * Rate limits actions to configurable requests per minute (default: 30).
  */
-export async function rateLimit(key: string): Promise<{
+export async function rateLimit(
+  key: string,
+  limit: number = 30
+): Promise<{
   success: boolean;
   limit: number;
   remaining: number;
@@ -73,9 +76,9 @@ export async function rateLimit(key: string): Promise<{
       };
     } catch (err) {
       console.warn('Upstash rate limit request failed, falling back to memory:', err);
-      return memoryRateLimit(key, 30, 60 * 1000);
+      return memoryRateLimit(key, limit, 60 * 1000);
     }
   }
 
-  return memoryRateLimit(key, 30, 60 * 1000);
+  return memoryRateLimit(key, limit, 60 * 1000);
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { BookOpen, Search, User, LogOut, Bookmark } from "lucide-react";
+import { BookOpen, User, LogOut, Bookmark } from "lucide-react";
 import { ThemeToggle } from "@/components/common/theme-toggle";
+import { SearchCommandDialog } from "@/components/search/search-command-dialog";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/auth";
 import { logoutAction } from "@/lib/actions/auth";
@@ -61,11 +62,7 @@ export async function Header() {
 
         {/* Right Action Icons & Session Controls */}
         <div className="flex items-center gap-3">
-          <Link href="/articles" aria-label="Tìm kiếm bài viết">
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-              <Search className="h-5 w-5" />
-            </Button>
-          </Link>
+          <SearchCommandDialog />
 
           <ThemeToggle />
 

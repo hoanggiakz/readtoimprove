@@ -60,91 +60,28 @@ export function getPublicArticleWhereClause(
 
 /**
  * Retrieve paginated public articles with optional category, CEFR, and search query filters.
+ * Upgraded in Phase 8 to leverage the hybrid PostgreSQL full-text & trigram search engine.
  */
 export async function getPublicArticles(
   options: GetPublicArticlesOptions = {}
 ): Promise<PaginatedArticlesResult> {
-  const page = Math.max(1, options.page || 1);
-  const pageSize = Math.min(50, Math.max(1, options.pageSize || PUBLIC_PAGE_SIZE));
-  const skip = (page - 1) * pageSize;
-  const now = new Date();
-
-  const andConditions: Prisma.ArticleWhereInput[] = [];
-
-  // Exclude specific ID if requested (e.g., hero spotlight)
-  if (options.excludeId) {
-    andConditions.push({ id: { not: options.excludeId } });
-  }
-
-  // Category filter
-  if (options.categorySlug) {
-    andConditions.push({
-      categories: {
-        some: {
-          category: {
-            slug: options.categorySlug,
-          },
-        },
-      },
-    });
-  }
-
-  // CEFR level filter
-  if (options.cefrLevel) {
-    andConditions.push({
-      cefrLevel: options.cefrLevel,
-    });
-  }
-
-  // Insensitive bilingual keyword search
-  if (options.searchQuery && options.searchQuery.trim().length >= 2) {
-    const query = options.searchQuery.trim();
-    andConditions.push({
-      OR: [
-        { titleEn: { contains: query, mode: 'insensitive' } },
-        { titleVi: { contains: query, mode: 'insensitive' } },
-        { excerptEn: { contains: query, mode: 'insensitive' } },
-        { excerptVi: { contains: query, mode: 'insensitive' } },
-      ],
-    });
-  }
-
-  const where = getPublicArticleWhereClause(
-    andConditions.length > 0 ? { AND: andConditions } : undefined,
-    now
-  );
-
-  const [articles, totalCount] = await prisma.$transaction([
-    prisma.article.findMany({
-      where,
-      skip,
-      take: pageSize,
-      orderBy: [{ publishedAt: 'desc' }, { id: 'desc' }],
-      include: {
-        categories: {
-          include: {
-            category: true,
-          },
-        },
-        _count: {
-          select: {
-            sentences: true,
-          },
-        },
-      },
-    }),
-    prisma.article.count({ where }),
-  ]);
-
-  const totalPages = Math.ceil(totalCount / pageSize) || 1;
+  const { searchPublicArticles } = await import('@/lib/search');
+  const result = await searchPublicArticles({
+    q: options.searchQuery,
+    categorySlug: options.categorySlug,
+    cefrLevel: options.cefrLevel,
+    page: options.page,
+    pageSize: options.pageSize,
+    excludeId: options.excludeId,
+  });
 
   return {
-    articles,
-    totalCount,
-    totalPages,
-    currentPage: page,
-    hasNextPage: page < totalPages,
-    hasPrevPage: page > 1,
+    articles: result.articles as unknown as PublicArticleSummary[],
+    totalCount: result.totalCount,
+    totalPages: result.totalPages,
+    currentPage: result.currentPage,
+    hasNextPage: result.hasNextPage,
+    hasPrevPage: result.hasPrevPage,
   };
 }
 
