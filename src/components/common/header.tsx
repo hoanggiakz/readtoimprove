@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { BookOpen, User, LogOut, Bookmark } from "lucide-react";
+import { BookOpen, Bookmark } from "lucide-react";
 import { ThemeToggle } from "@/components/common/theme-toggle";
 import { SearchCommandDialog } from "@/components/search/search-command-dialog";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/auth";
-import { logoutAction } from "@/lib/actions/auth";
+import { UserDropdownMenu } from "@/components/common/user-dropdown-menu";
 
 export async function Header() {
   const session = await auth();
@@ -69,24 +69,7 @@ export async function Header() {
           {/* User Session State */}
           {session ? (
             <div className="flex items-center gap-2 border-l pl-3">
-              <Link href="/word-bank" className="sm:hidden" aria-label="Sổ từ vựng">
-                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" title="Sổ từ vựng">
-                  <Bookmark className="h-4 w-4" />
-                </Button>
-              </Link>
-              <div className="hidden sm:flex items-center gap-2">
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">
-                  <User className="h-3.5 w-3.5" />
-                </div>
-                <span className="text-xs font-medium text-foreground max-w-[120px] truncate">
-                  {session.user.name}
-                </span>
-              </div>
-              <form action={logoutAction}>
-                <Button variant="ghost" size="icon" title="Đăng xuất" aria-label="Đăng xuất">
-                  <LogOut className="h-4 w-4 text-muted-foreground hover:text-destructive transition-colors" />
-                </Button>
-              </form>
+              <UserDropdownMenu user={session.user} />
             </div>
           ) : (
             <div className="flex items-center gap-2">

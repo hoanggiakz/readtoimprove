@@ -1,11 +1,11 @@
 # PROJECT STATE
 
 ## Current Status
-- PHASE: 08 — Search & Filter (Global Discovery)
+- PHASE: 09 — User Reading History & Progress Tracking
 - STATUS: WAIT
 - RESULT: PASS
-- LAST_UPDATED: 2026-09-14T21:45:00Z
-- BRANCH: master
+- LAST_UPDATED: 2026-09-21T21:50:00Z
+- BRANCH: feat/phase-09
 
 ## Completed Phases
 - [x] Phase 0 — Project Discovery (artifact: `/docs/00_DISCOVERY_AND_REQUIREMENTS.md` to `/docs/05_RISKS_AMBIGUITIES_AND_DECISIONS.md`)
@@ -17,6 +17,7 @@
 - [x] Phase 6 — Article Reading Experience (artifact: `/docs/phases/PHASE_06_REPORT.md`, commit: `b73de4d`)
 - [x] Phase 7 — Vocabulary & Personal Word Bank (artifact: `/docs/phases/PHASE_07_REPORT.md`, commit: `3520b86`)
 - [x] Phase 8 — Search & Filter (artifact: `/docs/phases/PHASE_08_REPORT.md`, commit: `bfb406a`)
+- [x] Phase 9 — User Reading History & Progress Tracking (artifact: `/docs/phases/PHASE_09_REPORT.md`)
 
 ## Architecture Decisions (ADR)
 - **ADR-001**: Signed cryptographic JWT sessions via `jose` + bcrypt password hashing + PostgreSQL session verification (`auth()`, `requireAuth()`, `requireAdmin()`).
@@ -31,9 +32,12 @@
 - **ADR-010**: Constant 3-query architecture for personal Word Bank page eliminating N+1 queries; batch-lookup of saved IDs on reader load.
 - **ADR-011**: Incremental OpenAPI 3.1 adoption (`docs/api/openapi.yaml`) initiated with Phase 8 discovery endpoints (`/api/search`, `/api/search/suggestions`), with backfill schedule for previous phases documented in `docs/api/README.md`.
 - **ADR-012**: Phase 0 documentation naming deviation: standardized on root `docs/00_DISCOVERY_AND_REQUIREMENTS.md` through `docs/05_RISKS_AMBIGUITIES_AND_DECISIONS.md` as primary BRD/FSD source of truth in place of `docs/phase-00/`.
+- **ADR-013**: Reading Progress Debounce (5,000ms) & Monotonic Server Persistence (`Math.max(existing, new)`) with automatic completion threshold at $\ge 90\%$; client-side flush on `visibilitychange` and `pagehide`; guest reading fallback in `localStorage` merged atomically on authentication.
+- **ADR-014**: Timezone-Aware Streak Calculation (`Asia/Ho_Chi_Minh`) & Pure SVG Learning Analytics without external chart libraries (eliminates React 19 dependency conflicts and 150KB+ bundle bloat; computed on-the-fly in < 5ms).
+- **ADR-015**: Strict Open Redirect Neutralization via `sanitizeReturnUrl` (`src/lib/url-utils.ts`) rejecting protocol-relative URLs (`//`), Windows backslashes (`\`), control characters, and external schemes; enforcing safe internal relative navigation post-auth.
 
 ## Database Schema Version
-- Last migration: `20260914140000_add_article_full_text_search`
+- Last migration: `20260922000000_add_user_history_and_goals`
 - Seed version: v1 (Original educational content seeder in `prisma/seed.ts`)
 
 ## API Contract Version
@@ -43,8 +47,8 @@
 ## Known Issues / Tech Debt
 - Upstash Redis rate limiter operates with in-memory sliding window fallback in local dev without Redis credentials.
 - External search engine (Meilisearch/Elasticsearch) migration deferred until catalog exceeds 10,000 articles and p95 search latency exceeds 200ms for 7 consecutive days.
-- All 7 regression verification suites (`verify-db.ts`, `verify-auth.ts`, `verify-admin.ts`, `verify-public.ts`, `verify-reader.ts`, `verify-word-bank.ts`, `verify-search.ts` — 153 tests total), `typecheck`, `lint`, and Next.js production `build` pass with 100% success.
+- All 8 regression verification suites (`verify-db.ts`, `verify-auth.ts`, `verify-admin.ts`, `verify-public.ts`, `verify-reader.ts`, `verify-word-bank.ts`, `verify-search.ts`, `verify-history-progress.ts` — 198 tests total), `typecheck`, `lint`, and Next.js production `build` pass with 100% success.
 
 ## Next Phase
-- PHASE 09 — User Reading History & Progress Tracking
-- Status: Awaiting user approval (`APPROVE PHASE 9`)
+- PHASE 10 — Flashcards & Spaced Repetition (SRS)
+- Status: Awaiting user approval (`APPROVE PHASE 10`)

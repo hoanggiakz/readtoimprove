@@ -19,7 +19,9 @@ export default function RegisterPage() {
         </p>
       </div>
 
-      <RegisterForm />
+      <React.Suspense fallback={<div className="h-48 animate-pulse rounded-lg bg-muted" />}>
+        <RegisterForm />
+      </React.Suspense>
     </div>
   );
 }

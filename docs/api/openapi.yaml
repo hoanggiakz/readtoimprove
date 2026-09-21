@@ -289,3 +289,126 @@ components:
       required:
         - error
         - message
+
+  /api/me/reading-history:
+    get:
+      summary: Retrieve authenticated user reading history
+      description: >
+        Returns paginated reading history items for the currently logged in user,
+        sorted by lastReadAt descending, with optional category and CEFR level filtering.
+      operationId: getReadingHistory
+      tags:
+        - User & Progress
+      security:
+        - CookieAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: level
+          in: query
+          schema:
+            type: string
+            enum: [A1, A2, B1, B2, C1, C2]
+      responses:
+        '200':
+          description: Paginated user reading history
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/me/favorites:
+    get:
+      summary: Retrieve authenticated user favorite articles
+      description: >
+        Returns paginated favorite articles for the currently logged in user,
+        sorted by createdAt descending, with optional category and CEFR level filtering.
+      operationId: getFavorites
+      tags:
+        - User & Progress
+      security:
+        - CookieAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: level
+          in: query
+          schema:
+            type: string
+            enum: [A1, A2, B1, B2, C1, C2]
+      responses:
+        '200':
+          description: Paginated favorite articles
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/me/stats:
+    get:
+      summary: Retrieve learning progress dashboard metrics
+      description: >
+        Returns learning analytics including consecutive day streak, total articles read,
+        total reading time, completed vs. in-progress counts, and 7-day activity array.
+      operationId: getUserStats
+      tags:
+        - User & Progress
+      security:
+        - CookieAuth: []
+      parameters:
+        - name: timezone
+          in: query
+          description: User timezone for streak calculations (default Asia/Ho_Chi_Minh)
+          schema:
+            type: string
+            default: Asia/Ho_Chi_Minh
+      responses:
+        '200':
+          description: Learning stats and activity data
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    CookieAuth:
+      type: apiKey
+      in: cookie
+      name: readtoimprove_session

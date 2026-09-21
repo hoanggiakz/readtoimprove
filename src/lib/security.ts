@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { Role } from "@prisma/client";
 import { auth, SessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sanitizeReturnUrl } from "@/lib/url-utils";
 
 /**
  * Enforces that the incoming request has a valid authenticated session.
@@ -11,7 +12,8 @@ export async function requireAuth(returnUrl?: string): Promise<SessionUser> {
   const session = await auth();
 
   if (!session || !session.user) {
-    const destination = returnUrl ? `/login?returnUrl=${encodeURIComponent(returnUrl)}` : "/login";
+    const safeUrl = sanitizeReturnUrl(returnUrl, "");
+    const destination = safeUrl ? `/login?returnUrl=${encodeURIComponent(safeUrl)}` : "/login";
     redirect(destination);
   }
 

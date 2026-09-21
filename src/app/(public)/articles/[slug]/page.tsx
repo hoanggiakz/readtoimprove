@@ -8,6 +8,8 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { CefrBadge } from '@/components/ui/cefr-badge';
 import { ReadingProgressBar } from '@/components/reader/reading-progress-bar';
+import { ResumeReadingBanner } from '@/components/reader/resume-reading-banner';
+import { FavoriteButton } from '@/components/public/favorite-button';
 import { BilingualSentenceList } from '@/components/reader/bilingual-sentence-list';
 import { SentenceDTO } from '@/components/reader/bilingual-sentence-item';
 import {
@@ -72,9 +74,11 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
     notFound();
   }
 
-  // Check authenticated user session to retrieve personal saved vocabulary status
+  // Check authenticated user session to retrieve personal saved vocabulary, progress & favorites
   const session = await auth();
   let initialSavedVocabIds: string[] = [];
+  let initialProgress = 0;
+  let isFavorited = false;
 
   if (session?.user?.id) {
     const articleVocabIds = Array.from(
@@ -85,16 +89,39 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
       )
     ) as string[];
 
-    if (articleVocabIds.length > 0) {
-      const savedRecords = await prisma.userSavedVocabulary.findMany({
+    const [savedRecords, historyRecord, favoriteRecord] = await Promise.all([
+      articleVocabIds.length > 0
+        ? prisma.userSavedVocabulary.findMany({
+            where: {
+              userId: session.user.id,
+              vocabularyId: { in: articleVocabIds },
+            },
+            select: { vocabularyId: true },
+          })
+        : [],
+      prisma.readingHistory.findUnique({
         where: {
-          userId: session.user.id,
-          vocabularyId: { in: articleVocabIds },
+          userId_articleId: {
+            userId: session.user.id,
+            articleId: article.id,
+          },
         },
-        select: { vocabularyId: true },
-      });
-      initialSavedVocabIds = savedRecords.map((r) => r.vocabularyId);
-    }
+        select: { readPercentage: true },
+      }),
+      prisma.favorite.findUnique({
+        where: {
+          userId_articleId: {
+            userId: session.user.id,
+            articleId: article.id,
+          },
+        },
+        select: { id: true },
+      }),
+    ]);
+
+    initialSavedVocabIds = savedRecords.map((r) => r.vocabularyId);
+    if (historyRecord) initialProgress = historyRecord.readPercentage;
+    if (favoriteRecord) isFavorited = true;
   }
 
   const formattedDate = article.publishedAt
@@ -153,8 +180,15 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
 
   return (
     <>
-      {/* Scroll Reading Progress Bar */}
-      <ReadingProgressBar />
+      {/* Scroll Reading Progress Bar with Debounced Persistence */}
+      <ReadingProgressBar
+        articleId={article.id}
+        initialProgress={initialProgress}
+        isLoggedIn={Boolean(session?.user?.id)}
+        slug={article.slug}
+        titleEn={article.titleEn}
+        titleVi={article.titleVi}
+      />
 
       {/* JSON-LD Schema */}
       <script
@@ -163,6 +197,9 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
       />
 
       <article className="container mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-6 md:py-10 space-y-8">
+        {/* Resume Reading Banner */}
+        <ResumeReadingBanner initialProgress={initialProgress} />
+
         {/* 1. TOP BREADCRUMB & BACK LINK */}
         <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-muted-foreground">
           <Link
@@ -233,21 +270,30 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
               </span>
             </div>
 
-            {/* External Source Attribution */}
-            {article.sourceName && (
-              <div className="flex items-center gap-1.5 text-xs">
-                <span>Nguồn gốc:</span>
-                <a
-                  href={article.sourceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-medium text-primary hover:underline inline-flex items-center gap-1"
-                >
-                  <span>{article.sourceName}</span>
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              </div>
-            )}
+            {/* External Source Attribution & Favorite Action */}
+            <div className="flex items-center gap-3">
+              {article.sourceName && (
+                <div className="flex items-center gap-1.5 text-xs">
+                  <span>Nguồn:</span>
+                  <a
+                    href={article.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-primary hover:underline inline-flex items-center gap-1"
+                  >
+                    <span>{article.sourceName}</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              )}
+
+              <FavoriteButton
+                articleId={article.id}
+                initialFavorited={isFavorited}
+                isLoggedIn={Boolean(session?.user?.id)}
+                showText={true}
+              />
+            </div>
           </div>
         </header>
 

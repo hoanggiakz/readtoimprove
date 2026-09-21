@@ -6,11 +6,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Lock, Mail, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { loginAction } from "@/lib/actions/auth";
+import { syncGuestHistoryAction } from "@/lib/actions/reading-history";
+import { sanitizeReturnUrl } from "@/lib/url-utils";
 
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const returnUrl = searchParams.get("returnUrl") || "/";
+  const rawReturnUrl = searchParams.get("returnUrl");
+  const safeReturnUrl = sanitizeReturnUrl(rawReturnUrl, "/");
 
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
@@ -35,7 +38,21 @@ export function LoginForm() {
         return;
       }
 
-      router.push(returnUrl);
+      // Merge guest reading history from localStorage if present
+      try {
+        const guestHistoryRaw = localStorage.getItem('readtoimprove_guest_history');
+        if (guestHistoryRaw) {
+          const guestHistory = JSON.parse(guestHistoryRaw);
+          if (Array.isArray(guestHistory) && guestHistory.length > 0) {
+            await syncGuestHistoryAction({ items: guestHistory });
+            localStorage.removeItem('readtoimprove_guest_history');
+          }
+        }
+      } catch (syncErr) {
+        console.warn('Guest history sync skipped:', syncErr);
+      }
+
+      router.push(safeReturnUrl);
       router.refresh();
     } catch {
       setErrorMessage("Đã xảy ra lỗi kết nối. Vui lòng thử lại sau.");
