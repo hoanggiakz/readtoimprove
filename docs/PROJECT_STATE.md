@@ -49,6 +49,8 @@
 - External search engine (Meilisearch/Elasticsearch) migration deferred until catalog exceeds 10,000 articles and p95 search latency exceeds 200ms for 7 consecutive days.
 - All 8 regression verification suites (`verify-db.ts`, `verify-auth.ts`, `verify-admin.ts`, `verify-public.ts`, `verify-reader.ts`, `verify-word-bank.ts`, `verify-search.ts`, `verify-history-progress.ts` — 198 tests total), `typecheck`, `lint`, and Next.js production `build` pass with 100% success.
 
-## Next Phase
+## Next Phases
 - PHASE 10 — Flashcards & Spaced Repetition (SRS)
+- PHASE 10.5 — Unit Test Framework Setup (Vitest, React Testing Library, @vitest/coverage-v8) [NEW]
+- PHASE 11 — Testing & Security Audit
 - Status: Awaiting user approval (`APPROVE PHASE 10`)
