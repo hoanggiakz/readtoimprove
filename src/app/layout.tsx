@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { WebVitals } from "@/components/analytics/web-vitals";
 
 const inter = Inter({
   subsets: ["latin", "vietnamese"],
@@ -8,13 +9,16 @@ const inter = Inter({
   display: "swap",
 });
 
+const defaultTitle = "ReadToImprove — Đọc Báo Song Ngữ Anh-Việt Nâng Cao Trình Độ";
+const defaultDescription =
+  "Nền tảng đọc tin tức song ngữ Anh–Việt thông minh. Đối chiếu câu song song, giải nghĩa từ vựng chuyên sâu và phân loại cấp độ CEFR chuẩn quốc tế.";
+
 export const metadata: Metadata = {
   title: {
-    default: "ReadToImprove — Đọc Báo Song Ngữ Anh-Việt Nâng Cao Trình Độ",
+    default: defaultTitle,
     template: "%s | ReadToImprove",
   },
-  description:
-    "Nền tảng đọc tin tức song ngữ Anh–Việt thông minh. Đối chiếu câu song song, giải nghĩa từ vựng chuyên sâu và phân loại cấp độ CEFR chuẩn quốc tế.",
+  description: defaultDescription,
   keywords: [
     "đọc báo song ngữ",
     "học tiếng anh qua tin tức",
@@ -26,13 +30,41 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "ReadToImprove Editorial Team" }],
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
     locale: "vi_VN",
     url: "/",
-    title: "ReadToImprove — Đọc Báo Song Ngữ Anh-Việt",
-    description: "Nâng cao kỹ năng đọc hiểu và vốn từ vựng học thuật qua tin tức quốc tế song ngữ Anh–Việt.",
+    title: defaultTitle,
+    description: defaultDescription,
     siteName: "ReadToImprove",
+    images: [
+      {
+        url: "/api/og?title=ReadToImprove&level=B2&category=News",
+        width: 1200,
+        height: 630,
+        alt: "ReadToImprove — Đọc Báo Song Ngữ Anh-Việt",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: defaultTitle,
+    description: defaultDescription,
+    images: ["/api/og?title=ReadToImprove&level=B2&category=News"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
 };
 
@@ -53,6 +85,7 @@ export default function RootLayout({
   return (
     <html lang="vi" suppressHydrationWarning className={inter.variable}>
       <body className="min-h-screen bg-background font-sans antialiased selection:bg-primary/20 selection:text-primary">
+        <WebVitals />
         {/* Skip to Content for WCAG Accessibility */}
         <a
           href="#main-content"
@@ -65,3 +98,4 @@ export default function RootLayout({
     </html>
   );
 }
+

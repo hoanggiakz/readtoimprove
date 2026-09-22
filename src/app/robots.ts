@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/$/, "");
   const adminPath = process.env.ADMIN_ROUTE_PATH || "/secure-console-x7";
 
   return {
@@ -9,9 +9,20 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: [`${adminPath}/*`, `${adminPath}`, "/api/admin/*"],
+        disallow: [
+          `${adminPath}/*`,
+          `${adminPath}`,
+          "/api/admin/*",
+          "/api/*",
+          "/me/*",
+          "/me",
+          "/word-bank/*",
+          "/word-bank",
+        ],
+
       },
     ],
     sitemap: `${baseUrl}/sitemap.xml`,
   };
 }
+

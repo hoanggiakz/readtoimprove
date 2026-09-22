@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 
 export default function NotFound() {
   return (
-    <div className="container mx-auto flex min-h-[70vh] max-w-2xl flex-col items-center justify-center px-4 text-center">
+    <main id="main-content" className="container mx-auto flex min-h-[70vh] max-w-2xl flex-col items-center justify-center px-4 text-center">
+      <meta name="robots" content="noindex, nofollow" />
       <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted text-muted-foreground mb-6">
         <FileQuestion className="h-8 w-8 text-primary" />
       </div>
+
 
       <span className="text-xs font-semibold uppercase tracking-widest text-primary">Lỗi 404</span>
       <h1 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl text-foreground">
@@ -38,6 +40,7 @@ export default function NotFound() {
           Quay lại trang trước
         </Button>
       </div>
-    </div>
+    </main>
   );
 }
+

@@ -6,7 +6,12 @@ import { MeNavTabs } from '@/components/me/me-nav-tabs';
 export const metadata: Metadata = {
   title: 'Trang cá nhân | ReadToImprove',
   description: 'Quản lý lịch sử đọc, bài viết đã lưu, tiến độ học tập và sổ từ vựng cá nhân.',
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
+
 
 export default async function MeLayout({
   children,

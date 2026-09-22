@@ -21,6 +21,7 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { JsonLd } from '@/components/seo/json-ld';
 
 interface ArticleDetailPageProps {
   params: Promise<{
@@ -49,6 +50,13 @@ export async function generateMetadata({
     article.excerptVi ||
     'Đọc báo song ngữ Anh–Việt câu đối câu chuẩn CEFR tại ReadToImprove.';
 
+  const categoryName = article.categories?.[0]?.category?.nameVi || 'Tin tức';
+  const readTime = article.readingTimeMinutes || 5;
+  const ogImageUrl =
+    article.thumbnailUrl ||
+    `/api/og?title=${encodeURIComponent(article.titleEn)}&level=${article.cefrLevel}&category=${encodeURIComponent(categoryName)}&readingTime=${readTime}%20min`;
+
+
   return {
     title,
     description,
@@ -61,7 +69,21 @@ export async function generateMetadata({
       url: `/articles/${article.slug}`,
       type: 'article',
       publishedTime: article.publishedAt ? new Date(article.publishedAt).toISOString() : undefined,
-      images: article.thumbnailUrl ? [{ url: article.thumbnailUrl }] : undefined,
+      modifiedTime: article.updatedAt ? new Date(article.updatedAt).toISOString() : undefined,
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: article.titleEn,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [ogImageUrl],
     },
   };
 }
@@ -160,26 +182,86 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
     })),
   }));
 
-  // JSON-LD Structured Data for NewsArticle
-  const jsonLd = {
+  // Structured Data (JSON-LD)
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '');
+  const primaryCategory = article.categories?.[0]?.category;
+  const readTime = article.readingTimeMinutes || 5;
+  const currentOgImage =
+    article.thumbnailUrl ||
+    `${baseUrl}/api/og?title=${encodeURIComponent(article.titleEn)}&level=${article.cefrLevel}&category=${encodeURIComponent(primaryCategory?.nameVi || 'Tin tức')}&readingTime=${readTime}%20min`;
+
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Trang chủ',
+        item: baseUrl,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Kho bài báo',
+        item: `${baseUrl}/articles`,
+      },
+      ...(primaryCategory
+        ? [
+            {
+              '@type': 'ListItem',
+              position: 3,
+              name: primaryCategory.nameVi,
+              item: `${baseUrl}/categories/${primaryCategory.slug}`,
+            },
+            {
+              '@type': 'ListItem',
+              position: 4,
+              name: article.titleEn,
+              item: `${baseUrl}/articles/${article.slug}`,
+            },
+          ]
+        : [
+            {
+              '@type': 'ListItem',
+              position: 3,
+              name: article.titleEn,
+              item: `${baseUrl}/articles/${article.slug}`,
+            },
+          ]),
+    ],
+  };
+
+  const articleSchema = {
     '@context': 'https://schema.org',
     '@type': 'NewsArticle',
     headline: article.titleEn,
-    description: article.excerptEn || article.excerptVi,
+    alternativeHeadline: article.titleVi,
+    description: article.metaDescription || article.excerptVi || article.excerptEn || article.titleVi,
     datePublished: article.publishedAt ? new Date(article.publishedAt).toISOString() : undefined,
-    image: article.thumbnailUrl || undefined,
-    author: {
-      '@type': 'Organization',
-      name: article.sourceName || 'ReadToImprove',
-    },
+    dateModified: article.updatedAt ? new Date(article.updatedAt).toISOString() : undefined,
+    image: [currentOgImage],
+    author: [
+      {
+        '@type': 'Organization',
+        name: article.sourceName || 'ReadToImprove Editorial Team',
+        url: article.sourceUrl || baseUrl,
+      },
+    ],
     publisher: {
       '@type': 'Organization',
       name: 'ReadToImprove',
+      url: baseUrl,
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': `${baseUrl}/articles/${article.slug}`,
     },
   };
 
   return (
-    <>
+    <main id="main-content">
       {/* Scroll Reading Progress Bar with Debounced Persistence */}
       <ReadingProgressBar
         articleId={article.id}
@@ -190,11 +272,9 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
         titleVi={article.titleVi}
       />
 
-      {/* JSON-LD Schema */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      {/* JSON-LD Schemas */}
+      <JsonLd data={articleSchema} />
+      <JsonLd data={breadcrumbSchema} />
 
       <article className="container mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-6 md:py-10 space-y-8">
         {/* Resume Reading Banner */}
@@ -368,6 +448,6 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
           </div>
         </footer>
       </article>
-    </>
+    </main>
   );
 }

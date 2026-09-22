@@ -206,8 +206,10 @@ export function ReadingProgressBar({
       {saveStatus !== 'idle' && (
         <div
           aria-live="polite"
+          aria-atomic="true"
           className="fixed top-2.5 right-4 z-50 flex items-center gap-1.5 rounded-full border border-border/60 bg-background/90 backdrop-blur px-2.5 py-0.5 text-[11px] font-medium text-foreground shadow-xs animate-in fade-in duration-200"
         >
+
           {saveStatus === 'saving' && (
             <>
               <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />

@@ -13,6 +13,50 @@ export function ClearHistoryDialog() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const dialogRef = React.useRef<HTMLDivElement>(null);
+  const triggerRef = React.useRef<HTMLElement | null>(null);
+
+  const openDialog = () => {
+    triggerRef.current = document.activeElement as HTMLElement;
+    setIsOpen(true);
+  };
+
+  const closeDialog = () => {
+    setIsOpen(false);
+    triggerRef.current?.focus();
+  };
+
+  // Keyboard navigation within modal (Tab cycle & Escape close)
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closeDialog();
+      return;
+    }
+
+    if (e.key === 'Tab') {
+      const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), input[type="radio"]:not([disabled])'
+      );
+      if (!focusable || focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+  };
+
   const handleClear = async () => {
     setIsLoading(true);
     setErrorMessage(null);
@@ -20,7 +64,7 @@ export function ClearHistoryDialog() {
     try {
       const res = await clearReadingHistoryAction({ timeframe });
       if (res.success) {
-        setIsOpen(false);
+        closeDialog();
         router.refresh();
       } else {
         setErrorMessage(res.message || 'Không thể xoá lịch sử đọc.');
@@ -37,7 +81,7 @@ export function ClearHistoryDialog() {
       <Button
         variant="outline"
         size="sm"
-        onClick={() => setIsOpen(true)}
+        onClick={openDialog}
         className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-destructive hover:border-destructive/30"
       >
         <Trash2 className="h-3.5 w-3.5" />
@@ -49,9 +93,18 @@ export function ClearHistoryDialog() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="clear-history-title"
+          onKeyDown={handleKeyDown}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-xs animate-in fade-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              closeDialog();
+            }
+          }}
         >
-          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl space-y-5 animate-in zoom-in-95 duration-200">
+          <div
+            ref={dialogRef}
+            className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl space-y-5 animate-in zoom-in-95 duration-200"
+          >
             {/* Dialog Header */}
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
@@ -69,12 +122,14 @@ export function ClearHistoryDialog() {
               </div>
               <button
                 type="button"
-                onClick={() => setIsOpen(false)}
+                onClick={closeDialog}
+                aria-label="Đóng hộp thoại"
                 className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
+
 
             {errorMessage && (
               <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 text-xs text-destructive">
@@ -160,9 +215,10 @@ export function ClearHistoryDialog() {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => setIsOpen(false)}
+                onClick={closeDialog}
                 disabled={isLoading}
               >
+
                 Huỷ bỏ
               </Button>
               <Button

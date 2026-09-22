@@ -214,8 +214,10 @@ export function SearchBar({
         <div
           id="autocomplete-suggestions-list"
           role="listbox"
+          aria-live="polite"
           className="absolute z-50 left-0 right-0 mt-2 bg-card border rounded-xl shadow-xl overflow-hidden py-1 divide-y divide-border/30 animate-in fade-in-0 zoom-in-95 duration-100"
         >
+
           <div className="px-3 py-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center justify-between">
             <span>Gợi ý nhanh</span>
             <span className="text-[10px] lowercase font-normal">

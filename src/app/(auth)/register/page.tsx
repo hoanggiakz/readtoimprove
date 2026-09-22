@@ -3,9 +3,17 @@ import type { Metadata } from "next";
 import { RegisterForm } from "@/components/auth/register-form";
 
 export const metadata: Metadata = {
-  title: "Đăng ký tài khoản",
+  title: "Đăng ký tài khoản | ReadToImprove",
   description: "Tạo tài khoản học viên miễn phí trên ReadToImprove.",
+  alternates: {
+    canonical: "/register",
+  },
+  robots: {
+    index: false,
+    follow: true,
+  },
 };
+
 
 export default function RegisterPage() {
   return (
