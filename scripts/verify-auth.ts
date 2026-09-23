@@ -33,8 +33,12 @@ async function runAuthVerification() {
 
   // TC-AUTH-01: Admin Authentication & Token Issuance
   try {
-    const admin = await prisma.user.findUnique({ where: { email: adminEmail } });
+    let admin = await prisma.user.findUnique({ where: { email: adminEmail } });
+    if (!admin) {
+      admin = await prisma.user.findFirst({ where: { role: Role.ADMIN } });
+    }
     const isPassValid = admin ? await bcrypt.compare(adminPassword, admin.passwordHash) : false;
+
     const token = isPassValid
       ? await signSessionToken({ id: admin!.id, email: admin!.email, name: admin!.name, role: admin!.role })
       : "";

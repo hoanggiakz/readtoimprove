@@ -1,4 +1,5 @@
 import React from 'react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import {
   getSpotlightArticle,
@@ -14,10 +15,38 @@ import { EmptyState } from '@/components/public/empty-state';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Newspaper } from 'lucide-react';
+import { JsonLd } from '@/components/seo/json-ld';
 
 export const revalidate = 60; // Revalidate every minute
 
+export const metadata: Metadata = {
+  title: 'ReadToImprove — Đọc Báo Song Ngữ Anh-Việt Nâng Cao Trình Độ',
+  description:
+    'Nền tảng đọc tin tức song ngữ Anh–Việt thông minh. Đối chiếu câu song song, giải nghĩa từ vựng chuyên sâu và phân loại cấp độ CEFR chuẩn quốc tế.',
+  alternates: {
+    canonical: '/',
+  },
+};
+
 export default async function HomePage() {
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '');
+
+  const websiteSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'ReadToImprove',
+    alternateName: 'Đọc Báo Song Ngữ Anh-Việt',
+    url: baseUrl,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${baseUrl}/articles?q={search_term_string}`,
+      },
+      'query-input': 'required name=search_term_string',
+    },
+  };
+
   const [spotlightArticle, categories] = await Promise.all([
     getSpotlightArticle(),
     getPublicCategoriesWithCounts(),
@@ -30,9 +59,11 @@ export default async function HomePage() {
   });
 
   return (
-    <div className="flex flex-col gap-12 sm:gap-16 py-6 md:py-12">
+    <main id="main-content" className="flex flex-col gap-12 sm:gap-16 py-6 md:py-12">
+      <JsonLd data={websiteSchema} />
       {/* 1. HERO DISCOVERY HEADER & SEARCH */}
       <section className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
+
         <div className="max-w-3xl mx-auto text-center space-y-3">
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1 text-xs font-medium text-primary">
             <span>Khám phá tin tức quốc tế song ngữ Anh–Việt</span>
@@ -229,6 +260,7 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-    </div>
+    </main>
   );
 }
+

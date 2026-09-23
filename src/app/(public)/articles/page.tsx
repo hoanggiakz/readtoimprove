@@ -13,6 +13,7 @@ import { SearchBar } from '@/components/public/search-bar';
 import { Pagination } from '@/components/public/pagination';
 import { EmptyState } from '@/components/public/empty-state';
 import { BookOpen, Filter, X } from 'lucide-react';
+import { JsonLd } from '@/components/seo/json-ld';
 
 export const revalidate = 60;
 
@@ -51,6 +52,26 @@ export async function generateMetadata({
 }
 
 export default async function ArticlesPage({ searchParams }: ArticlesPageProps) {
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '');
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Trang chủ',
+        item: baseUrl,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Kho bài báo song ngữ',
+        item: `${baseUrl}/articles`,
+      },
+    ],
+  };
+
   const resolvedParams = await searchParams;
   const parsed = publicArticlesQuerySchema.safeParse(resolvedParams);
 
@@ -75,8 +96,10 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
   );
 
   return (
-    <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 md:py-12 space-y-8">
+    <main id="main-content" className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 md:py-12 space-y-8">
+      <JsonLd data={breadcrumbSchema} />
       {/* 1. PAGE HEADER */}
+
       <div className="space-y-3">
         <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
           <BookOpen className="w-4 h-4" />
@@ -203,6 +226,7 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
           }}
         />
       </div>
-    </div>
+    </main>
   );
 }
+

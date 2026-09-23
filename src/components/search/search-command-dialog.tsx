@@ -19,13 +19,32 @@ export function SearchCommandDialog() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
+
+  const openDialog = () => {
+    triggerRef.current = document.activeElement as HTMLElement;
+    setIsOpen(true);
+  };
+
+  const closeDialog = () => {
+    setIsOpen(false);
+    triggerRef.current?.focus();
+  };
 
   // Global Ctrl+K / Cmd+K listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        setIsOpen((prev) => !prev);
+        setIsOpen((prev) => {
+          if (!prev) {
+            triggerRef.current = document.activeElement as HTMLElement;
+            return true;
+          } else {
+            triggerRef.current?.focus();
+            return false;
+          }
+        });
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -45,6 +64,31 @@ export function SearchCommandDialog() {
       setSelectedIndex(-1);
     }
   }, [isOpen]);
+
+  // Trap focus within dialog on Tab / Shift+Tab
+  const handleDialogKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Tab') {
+      const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
+        'input, button, a[href], [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusable || focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+  };
 
   // Debounced autocomplete suggestions fetching
   useEffect(() => {
@@ -76,7 +120,7 @@ export function SearchCommandDialog() {
   }, [query]);
 
   const handleSelectSuggestion = (slug: string) => {
-    setIsOpen(false);
+    closeDialog();
     startTransition(() => {
       router.push(`/articles/${slug}`);
     });
@@ -84,7 +128,7 @@ export function SearchCommandDialog() {
 
   const handleFullSearch = (searchQuery: string) => {
     const trimmed = searchQuery.trim();
-    setIsOpen(false);
+    closeDialog();
     startTransition(() => {
       if (trimmed.length > 0) {
         router.push(`/articles?q=${encodeURIComponent(trimmed)}`);
@@ -97,7 +141,7 @@ export function SearchCommandDialog() {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Escape') {
       e.preventDefault();
-      setIsOpen(false);
+      closeDialog();
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
       setSelectedIndex((prev) =>
@@ -121,7 +165,7 @@ export function SearchCommandDialog() {
       {/* 1. Trigger Buttons */}
       {/* Desktop Trigger */}
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={openDialog}
         className="hidden md:flex items-center gap-2 h-9 px-3 text-xs text-muted-foreground bg-muted/50 hover:bg-muted border rounded-md transition-colors w-48 lg:w-64 justify-between"
         aria-label="Tìm kiếm bài viết (Ctrl+K)"
         title="Tìm kiếm bài viết (Ctrl+K)"
@@ -137,7 +181,7 @@ export function SearchCommandDialog() {
 
       {/* Mobile Trigger Button */}
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={openDialog}
         className="md:hidden flex items-center justify-center h-9 w-9 text-muted-foreground hover:text-foreground rounded-md transition-colors"
         aria-label="Mở tìm kiếm"
       >
@@ -151,12 +195,14 @@ export function SearchCommandDialog() {
           aria-modal="true"
           aria-label="Tìm kiếm bài viết song ngữ"
           className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24 px-4 bg-background/80 backdrop-blur-sm animate-in fade-in-0 duration-150"
+          onKeyDown={handleDialogKeyDown}
           onClick={(e) => {
             if (e.target === e.currentTarget) {
-              setIsOpen(false);
+              closeDialog();
             }
           }}
         >
+
           <div
             ref={dialogRef}
             className="w-full max-w-xl bg-card border rounded-xl shadow-2xl overflow-hidden flex flex-col transition-all animate-in zoom-in-95 duration-150"
@@ -199,8 +245,11 @@ export function SearchCommandDialog() {
             <div
               id="search-suggestions-list"
               role="listbox"
+              aria-live="polite"
+              aria-atomic="false"
               className="max-h-[380px] overflow-y-auto p-2 divide-y divide-border/30"
             >
+
               {suggestions.length > 0 ? (
                 <div className="space-y-1">
                   <div className="px-3 py-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center justify-between">

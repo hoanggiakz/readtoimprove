@@ -7,6 +7,7 @@ import { ArticleCard } from '@/components/public/article-card';
 import { Pagination } from '@/components/public/pagination';
 import { EmptyState } from '@/components/public/empty-state';
 import { ChevronLeft, Layers } from 'lucide-react';
+import { JsonLd } from '@/components/seo/json-ld';
 
 interface CategoryPageProps {
   params: Promise<{
@@ -56,6 +57,32 @@ export default async function CategoryDetailPage({
     notFound();
   }
 
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '');
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Trang chủ',
+        item: baseUrl,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Chủ đề tin tức',
+        item: `${baseUrl}/categories`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: category.nameVi,
+        item: `${baseUrl}/categories/${category.slug}`,
+      },
+    ],
+  };
+
   const { articles, totalCount, totalPages } = await getPublicArticles({
     categorySlug: slug,
     page: currentPage,
@@ -63,8 +90,10 @@ export default async function CategoryDetailPage({
   });
 
   return (
-    <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 md:py-12 space-y-8">
+    <main id="main-content" className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 md:py-12 space-y-8">
+      <JsonLd data={breadcrumbSchema} />
       {/* 1. BREADCRUMBS */}
+
       <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-muted-foreground">
         <Link
           href="/categories"
@@ -135,6 +164,7 @@ export default async function CategoryDetailPage({
           baseUrl={`/categories/${category.slug}`}
         />
       </div>
-    </div>
+    </main>
   );
 }
+

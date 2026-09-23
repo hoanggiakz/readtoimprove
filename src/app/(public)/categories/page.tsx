@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getPublicCategoriesWithCounts } from '@/lib/articles';
 import { Layers, ArrowRight, BookOpen } from 'lucide-react';
+import { JsonLd } from '@/components/seo/json-ld';
 
 export const revalidate = 60;
 
@@ -16,11 +17,33 @@ export const metadata: Metadata = {
 };
 
 export default async function CategoriesPage() {
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '');
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Trang chủ',
+        item: baseUrl,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Chủ đề tin tức',
+        item: `${baseUrl}/categories`,
+      },
+    ],
+  };
+
   const categories = await getPublicCategoriesWithCounts();
 
   return (
-    <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 md:py-12 space-y-8">
+    <main id="main-content" className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 md:py-12 space-y-8">
+      <JsonLd data={breadcrumbSchema} />
       {/* 1. HEADER */}
+
       <div className="space-y-3">
         <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
           <Layers className="w-4 h-4" />
@@ -74,6 +97,7 @@ export default async function CategoriesPage() {
           );
         })}
       </div>
-    </div>
+    </main>
   );
 }
+

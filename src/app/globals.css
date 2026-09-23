@@ -34,9 +34,9 @@
 
     --radius: 0.5rem;
 
-    /* CEFR Palette Tokens - Light Mode */
+    /* CEFR Palette Tokens - Light Mode (tuned for WCAG AA >= 4.5:1 contrast) */
     --cefr-a1-bg: 210 40% 96.1%;
-    --cefr-a1-text: 215.4 16.3% 46.9%;
+    --cefr-a1-text: 215.4 25% 38%;
     --cefr-a1-border: 214.3 31.8% 85%;
 
     --cefr-a2-bg: 166 76% 97%;
@@ -48,17 +48,18 @@
     --cefr-b1-border: 152 60% 80%;
 
     --cefr-b2-bg: 204 94% 96%;
-    --cefr-b2-text: 201 96% 32%;
+    --cefr-b2-text: 201 96% 30%;
     --cefr-b2-border: 201 80% 80%;
 
     --cefr-c1-bg: 270 76% 96%;
-    --cefr-c1-text: 271 81% 38%;
+    --cefr-c1-text: 271 85% 34%;
     --cefr-c1-border: 271 70% 82%;
 
     --cefr-c2-bg: 350 89% 96%;
-    --cefr-c2-text: 347 77% 36%;
+    --cefr-c2-text: 347 80% 32%;
     --cefr-c2-border: 350 80% 82%;
   }
+
 
   .dark {
     --background: 222.2 84% 4.9%;
@@ -124,4 +125,19 @@
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
+  }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+

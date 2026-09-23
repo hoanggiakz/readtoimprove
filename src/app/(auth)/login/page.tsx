@@ -3,9 +3,17 @@ import type { Metadata } from "next";
 import { LoginForm } from "@/components/auth/login-form";
 
 export const metadata: Metadata = {
-  title: "Đăng nhập",
+  title: "Đăng nhập | ReadToImprove",
   description: "Đăng nhập vào tài khoản ReadToImprove để lưu từ vựng và theo dõi lịch sử đọc.",
+  alternates: {
+    canonical: "/login",
+  },
+  robots: {
+    index: false,
+    follow: true,
+  },
 };
+
 
 export default function LoginPage() {
   return (

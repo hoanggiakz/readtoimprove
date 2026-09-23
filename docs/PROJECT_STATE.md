@@ -1,11 +1,11 @@
 # PROJECT STATE
 
 ## Current Status
-- PHASE: 09 — User Reading History & Progress Tracking
+- PHASE: 11A — Unit Test Backfill & Coverage
 - STATUS: WAIT
 - RESULT: PASS
-- LAST_UPDATED: 2026-09-21T21:50:00Z
-- BRANCH: feat/phase-09
+- LAST_UPDATED: 2026-09-23T21:45:00Z
+- BRANCH: feat/phase-11a
 
 ## Completed Phases
 - [x] Phase 0 — Project Discovery (artifact: `/docs/00_DISCOVERY_AND_REQUIREMENTS.md` to `/docs/05_RISKS_AMBIGUITIES_AND_DECISIONS.md`)
@@ -17,7 +17,10 @@
 - [x] Phase 6 — Article Reading Experience (artifact: `/docs/phases/PHASE_06_REPORT.md`, commit: `b73de4d`)
 - [x] Phase 7 — Vocabulary & Personal Word Bank (artifact: `/docs/phases/PHASE_07_REPORT.md`, commit: `3520b86`)
 - [x] Phase 8 — Search & Filter (artifact: `/docs/phases/PHASE_08_REPORT.md`, commit: `bfb406a`)
-- [x] Phase 9 — User Reading History & Progress Tracking (artifact: `/docs/phases/PHASE_09_REPORT.md`)
+- [x] Phase 9 — User Reading History & Progress Tracking (artifact: `/docs/phases/PHASE_09_REPORT.md`, commit: `2516c94`)
+- [x] Phase 10 — SEO / Accessibility / Performance (artifact: `/docs/phases/PHASE_10_REPORT.md`)
+- [x] Phase 10.5 — Unit Test Framework Setup (artifact: `/docs/phases/PHASE_10_5_WALKTHROUGH.md`)
+- [x] Phase 11A — Unit Test Backfill & Coverage (artifact: `/docs/phases/PHASE_11A_WALKTHROUGH.md`)
 
 ## Architecture Decisions (ADR)
 - **ADR-001**: Signed cryptographic JWT sessions via `jose` + bcrypt password hashing + PostgreSQL session verification (`auth()`, `requireAuth()`, `requireAdmin()`).
@@ -35,6 +38,19 @@
 - **ADR-013**: Reading Progress Debounce (5,000ms) & Monotonic Server Persistence (`Math.max(existing, new)`) with automatic completion threshold at $\ge 90\%$; client-side flush on `visibilitychange` and `pagehide`; guest reading fallback in `localStorage` merged atomically on authentication.
 - **ADR-014**: Timezone-Aware Streak Calculation (`Asia/Ho_Chi_Minh`) & Pure SVG Learning Analytics without external chart libraries (eliminates React 19 dependency conflicts and 150KB+ bundle bloat; computed on-the-fly in < 5ms).
 - **ADR-015**: Strict Open Redirect Neutralization via `sanitizeReturnUrl` (`src/lib/url-utils.ts`) rejecting protocol-relative URLs (`//`), Windows backslashes (`\`), control characters, and external schemes; enforcing safe internal relative navigation post-auth.
+- **ADR-016**: Edge-Rendered Dynamic OpenGraph Image Generation via Next.js native `ImageResponse` (`@vercel/og` engine) with 1200x630 dark editorial styling, CEFR level badge, reading time, and 7-day CDN edge cache headers (`Cache-Control: public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400`).
+- **ADR-017**: Server-Rendered Schema.org Structured Data with Unicode Escaping (`\u003c`) to neutralize raw script injection vectors, providing `WebSite` with `SearchAction`, `NewsArticle`, and `BreadcrumbList`.
+- **ADR-018**: Deterministic Modal Focus Trapping, Escape Dismissal, and Trigger Focus Restoration on Dialog Elements (`SearchCommandDialog`, `ClearHistoryDialog`) complying with WCAG 2.1 AA dialog patterns.
+- **ADR-019**: Zero Client Bundle Growth Architecture for Metadata, Sitemaps, and Robots (100% Server Execution; First Load JS locked at 103 kB).
+- **ADR-020**: Vitest & React Testing Library (RTL) Unit Test Infrastructure Adoption with native V8 engine code coverage (@vitest/coverage-v8), scoped threshold enforcement (lines $\ge 80\%$, branches $\ge 70\%$), path alias resolution via `vite-tsconfig-paths`, and zero production bundle impact (First Load JS maintained at 103 kB).
+- **ADR-021**: Scoped Coverage Strategy for Legacy Modules:
+  - Context: Phase 11A backfills unit tests but legacy modules (from Phase 2–10) chưa có test.
+  - Decision: Áp dụng coverage thresholds theo glob scope, không global.
+    - `src/lib/validations/`: ≥ 95% lines.
+    - `src/lib/`: ≥ 90% lines.
+    - `src/components/`: ≥ 80% lines.
+    - `src/lib/actions/`: ≥ 70% lines (async).
+  - Consequence: Không fail CI khi thêm module mới chưa có test. Threshold sẽ tăng dần ở các phase sau.
 
 ## Database Schema Version
 - Last migration: `20260922000000_add_user_history_and_goals`
@@ -47,10 +63,11 @@
 ## Known Issues / Tech Debt
 - Upstash Redis rate limiter operates with in-memory sliding window fallback in local dev without Redis credentials.
 - External search engine (Meilisearch/Elasticsearch) migration deferred until catalog exceeds 10,000 articles and p95 search latency exceeds 200ms for 7 consecutive days.
-- All 8 regression verification suites (`verify-db.ts`, `verify-auth.ts`, `verify-admin.ts`, `verify-public.ts`, `verify-reader.ts`, `verify-word-bank.ts`, `verify-search.ts`, `verify-history-progress.ts` — 198 tests total), `typecheck`, `lint`, and Next.js production `build` pass with 100% success.
+- All 9 regression verification suites (`verify-db.ts`, `verify-auth.ts`, `verify-admin.ts`, `verify-public.ts`, `verify-reader.ts`, `verify-word-bank.ts`, `verify-search.ts`, `verify-history-progress.ts`, `verify-seo-a11y-perf.ts` — 226 tests total), Vitest unit test suite (168 tests), `typecheck`, `lint`, and Next.js production `build` pass with 100% success.
+- Phase 11B (Security Audit & Penetration Testing) scheduled to run static vulnerability scans, OWASP Top 10 checks, auth bypass attacks, and rate-limit audit.
 
 ## Next Phases
-- PHASE 10 — Flashcards & Spaced Repetition (SRS)
-- PHASE 10.5 — Unit Test Framework Setup (Vitest, React Testing Library, @vitest/coverage-v8) [NEW]
-- PHASE 11 — Testing & Security Audit
-- Status: Awaiting user approval (`APPROVE PHASE 10`)
+- PHASE 11B — Security Audit & Penetration Testing
+- Status: Awaiting user approval (`APPROVE PHASE 11A`)
+
+
