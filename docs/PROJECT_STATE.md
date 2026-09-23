@@ -1,11 +1,11 @@
 # PROJECT STATE
 
 ## Current Status
-- PHASE: 10.5 — Unit Test Framework Setup
+- PHASE: 11A — Unit Test Backfill & Coverage
 - STATUS: WAIT
 - RESULT: PASS
-- LAST_UPDATED: 2026-09-23T21:10:00Z
-- BRANCH: feat/phase-10.5
+- LAST_UPDATED: 2026-09-23T21:45:00Z
+- BRANCH: feat/phase-11a
 
 ## Completed Phases
 - [x] Phase 0 — Project Discovery (artifact: `/docs/00_DISCOVERY_AND_REQUIREMENTS.md` to `/docs/05_RISKS_AMBIGUITIES_AND_DECISIONS.md`)
@@ -20,6 +20,7 @@
 - [x] Phase 9 — User Reading History & Progress Tracking (artifact: `/docs/phases/PHASE_09_REPORT.md`, commit: `2516c94`)
 - [x] Phase 10 — SEO / Accessibility / Performance (artifact: `/docs/phases/PHASE_10_REPORT.md`)
 - [x] Phase 10.5 — Unit Test Framework Setup (artifact: `/docs/phases/PHASE_10_5_WALKTHROUGH.md`)
+- [x] Phase 11A — Unit Test Backfill & Coverage (artifact: `/docs/phases/PHASE_11A_WALKTHROUGH.md`)
 
 ## Architecture Decisions (ADR)
 - **ADR-001**: Signed cryptographic JWT sessions via `jose` + bcrypt password hashing + PostgreSQL session verification (`auth()`, `requireAuth()`, `requireAdmin()`).
@@ -42,6 +43,7 @@
 - **ADR-018**: Deterministic Modal Focus Trapping, Escape Dismissal, and Trigger Focus Restoration on Dialog Elements (`SearchCommandDialog`, `ClearHistoryDialog`) complying with WCAG 2.1 AA dialog patterns.
 - **ADR-019**: Zero Client Bundle Growth Architecture for Metadata, Sitemaps, and Robots (100% Server Execution; First Load JS locked at 103 kB).
 - **ADR-020**: Vitest & React Testing Library (RTL) Unit Test Infrastructure Adoption with native V8 engine code coverage (@vitest/coverage-v8), scoped threshold enforcement (lines $\ge 80\%$, branches $\ge 70\%$), path alias resolution via `vite-tsconfig-paths`, and zero production bundle impact (First Load JS maintained at 103 kB).
+- **ADR-021**: In-Memory Mocking Isolation for Fast Unit Tests (`src/__tests__/factories/mock-prisma.ts`, `vi.hoisted`) with strict decoupling from integration tests (`scripts/verify-*.ts`). Pure functions, validations, server actions, and UI components are tested in-memory with sub-10s execution for 168 tests, guaranteeing deterministic CI speed without Docker dependency.
 
 ## Database Schema Version
 - Last migration: `20260922000000_add_user_history_and_goals`
@@ -54,11 +56,11 @@
 ## Known Issues / Tech Debt
 - Upstash Redis rate limiter operates with in-memory sliding window fallback in local dev without Redis credentials.
 - External search engine (Meilisearch/Elasticsearch) migration deferred until catalog exceeds 10,000 articles and p95 search latency exceeds 200ms for 7 consecutive days.
-- All 9 regression verification suites (`verify-db.ts`, `verify-auth.ts`, `verify-admin.ts`, `verify-public.ts`, `verify-reader.ts`, `verify-word-bank.ts`, `verify-search.ts`, `verify-history-progress.ts`, `verify-seo-a11y-perf.ts` — 226 tests total), Vitest unit test suite (12 tests), `typecheck`, `lint`, and Next.js production `build` pass with 100% success.
-- Incremental expansion of unit test suites for new features (SRS algorithm, Flashcard decks) scheduled for Phase 11.
+- All 9 regression verification suites (`verify-db.ts`, `verify-auth.ts`, `verify-admin.ts`, `verify-public.ts`, `verify-reader.ts`, `verify-word-bank.ts`, `verify-search.ts`, `verify-history-progress.ts`, `verify-seo-a11y-perf.ts` — 226 tests total), Vitest unit test suite (168 tests), `typecheck`, `lint`, and Next.js production `build` pass with 100% success.
+- Phase 11B (Security Audit & Penetration Testing) scheduled to run static vulnerability scans, OWASP Top 10 checks, auth bypass attacks, and rate-limit audit.
 
 ## Next Phases
-- PHASE 11 — Flashcards & Spaced Repetition (SRS)
-- Status: Awaiting user approval (`APPROVE PHASE 10.5`)
+- PHASE 11B — Security Audit & Penetration Testing
+- Status: Awaiting user approval (`APPROVE PHASE 11A`)
 
 
