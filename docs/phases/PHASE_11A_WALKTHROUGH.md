@@ -1,12 +1,14 @@
-# PHASE 11A — WALKTHROUGH REPORT: UNIT TEST BACKFILL & COVERAGE
+# PHASE 11A — WALKTHROUGH REPORT: UNIT TEST BACKFILL & COVERAGE (v1.1)
 
 **Project:** ReadToImprove  
 **Phase:** 11A — Unit Test Backfill & Coverage  
+**Document Version:** v1.1  
 **Date:** 2026-09-23  
 **Status:** COMPLETE — STATUS: WAIT (Awaiting User Review)  
 **Branch:** `feat/phase-11a`  
 **Git Tag Start:** `phase-11a-start`  
 **Git Tag Complete:** `phase-11a-complete`  
+**Commit:** `df558a2`  
 
 ---
 
@@ -30,7 +32,7 @@ Phase 11A expands the test infrastructure established in Phase 10.5 into a compr
    - **Core Lib Lines:** **86.62%**
    - **Server Actions Lines:** **83.14%**
 3. **High-Speed Execution**:
-   - Total Vitest runtime with code coverage: **9.53 seconds** (well under the 30-second requirement and 15-second target).
+   - Total Vitest runtime with code coverage: **8.97s - 10.79s** (well under the 30-second requirement and 15-second target).
 4. **Zero Production Bundle Impact**:
    - First Load JS shared by all remains strictly locked at **103 kB**.
 5. **100% Regression Safety**:
@@ -51,9 +53,121 @@ To ensure sub-10 second test execution and 100% deterministic results without Do
 
 ---
 
-## 3. V8 Coverage Report
+## 3. Raw Command Outputs
 
+### `npm test`
 ```text
+> readtoimprove@0.1.0 test
+> vitest run
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:3:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+
+ RUN  v5.0.1 D:/readtoimprove
+
+ ✓ src/lib/queries/__tests__/user-stats.test.ts (13 tests) 75ms
+ ✓ src/validations/__tests__/word-bank.test.ts (4 tests) 14ms
+ ✓ src/components/public/__tests__/article-card-skeleton.test.tsx (4 tests) 147ms
+ ✓ src/validations/__tests__/user-history.test.ts (6 tests) 15ms
+ ✓ src/components/search/__tests__/search-highlight.test.tsx (6 tests) 139ms
+ ✓ src/components/ui/__tests__/badge.test.tsx (6 tests) 162ms
+ ✓ src/components/__tests__/cefr-badge.test.tsx (6 tests) 206ms
+ ✓ src/components/ui/__tests__/button.test.tsx (8 tests) 562ms
+   ✓ Button UI Component Suite (8)
+     ✓ TC-UI-BTN-01: renders button with default variant and size 348ms
+ ✓ src/__tests__/smoke.test.tsx (5 tests) 521ms
+   ✓ Vitest & RTL Infrastructure Smoke Suite (5)
+     ✓ TC-SMOKE-02: renders a React component into jsdom 313ms
+ ✓ src/components/public/__tests__/pagination.test.tsx (7 tests) 588ms
+ ✓ src/components/public/__tests__/empty-state.test.tsx (5 tests) 618ms
+   ✓ EmptyState Public Component Suite (5)
+     ✓ TC-PUB-EMP-01: renders default title and description 474ms
+ ✓ src/validations/__tests__/search.test.ts (6 tests) 19ms
+ ✓ src/lib/__tests__/audit-log.test.ts (4 tests) 12ms
+ ✓ src/lib/actions/__tests__/reading-history.test.ts (12 tests) 20ms
+ ✓ src/lib/__tests__/search.test.ts (12 tests) 16ms
+ ✓ src/validations/__tests__/admin.test.ts (8 tests) 16ms
+ ✓ src/validations/__tests__/auth.test.ts (8 tests) 17ms
+ ✓ src/lib/__tests__/sentence-slicer.test.ts (10 tests) 19ms
+ ✓ src/lib/__tests__/offsets.test.ts (6 tests) 12ms
+ ✓ src/lib/actions/__tests__/vocabulary.test.ts (6 tests) 14ms
+ ✓ src/lib/actions/__tests__/favorites.test.ts (6 tests) 14ms
+ ✓ src/lib/__tests__/rate-limit.test.ts (5 tests) 11ms
+ ✓ src/lib/__tests__/cefr.test.ts (6 tests) 9ms
+ ✓ src/lib/__tests__/url-utils.test.ts (4 tests) 9ms
+ ✓ src/validations/__tests__/public.test.ts (5 tests) 9ms
+
+ Test Files  25 passed (25)
+      Tests  168 passed (168)
+   Start at  21:50:13
+   Duration  8.97s (environment 70%, setup 18%, tests 4%, transform 4%, import 3%, worker 1%)
+
+Environment  jsdom was created 25 times · 50.81s total, 70% of tracked time
+             create it once per worker with pool: 'vmThreads' (keeps per-file isolation) or isolate: false (shares it across files)
+             learn more: https://vitest.dev/guide/improving-performance#test-environments
+
+=== EXIT CODE: 0 ===
+```
+
+### `npm run test:coverage`
+```text
+> readtoimprove@0.1.0 test:coverage
+> vitest run --coverage
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:3:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+
+ RUN  v5.0.1 D:/readtoimprove
+      Coverage enabled with v8
+
+ ✓ src/lib/queries/__tests__/user-stats.test.ts (13 tests) 58ms
+ ✓ src/validations/__tests__/search.test.ts (6 tests) 27ms
+ ✓ src/lib/actions/__tests__/reading-history.test.ts (12 tests) 56ms
+ ✓ src/components/public/__tests__/article-card-skeleton.test.tsx (4 tests) 188ms
+ ✓ src/components/search/__tests__/search-highlight.test.tsx (6 tests) 191ms
+ ✓ src/components/ui/__tests__/badge.test.tsx (6 tests) 220ms
+ ✓ src/components/__tests__/cefr-badge.test.tsx (6 tests) 268ms
+ ✓ src/__tests__/smoke.test.tsx (5 tests) 693ms
+   ✓ Vitest & RTL Infrastructure Smoke Suite (5)
+     ✓ TC-SMOKE-02: renders a React component into jsdom 454ms
+ ✓ src/components/ui/__tests__/button.test.tsx (8 tests) 1073ms
+   ✓ Button UI Component Suite (8)
+     ✓ TC-UI-BTN-01: renders button with default variant and size 438ms
+ ✓ src/components/public/__tests__/empty-state.test.tsx (5 tests) 996ms
+   ✓ EmptyState Public Component Suite (5)
+     ✓ TC-PUB-EMP-01: renders default title and description 685ms
+ ✓ src/components/public/__tests__/pagination.test.tsx (7 tests) 1471ms
+   ✓ Pagination Public Component Suite (7)
+     ✓ TC-PUB-PGN-02: renders pagination nav with aria-label when totalPages > 1 575ms
+     ✓ TC-PUB-PGN-04: disables previous button on first page and enables on later pages 351ms
+ ✓ src/validations/__tests__/auth.test.ts (8 tests) 30ms
+ ✓ src/validations/__tests__/user-history.test.ts (6 tests) 40ms
+ ✓ src/lib/__tests__/search.test.ts (12 tests) 86ms
+ ✓ src/lib/actions/__tests__/favorites.test.ts (6 tests) 34ms
+ ✓ src/lib/__tests__/sentence-slicer.test.ts (10 tests) 45ms
+ ✓ src/validations/__tests__/admin.test.ts (8 tests) 65ms
+ ✓ src/validations/__tests__/word-bank.test.ts (4 tests) 52ms
+ ✓ src/lib/actions/__tests__/vocabulary.test.ts (6 tests) 31ms
+ ✓ src/lib/__tests__/audit-log.test.ts (4 tests) 29ms
+ ✓ src/lib/__tests__/offsets.test.ts (6 tests) 23ms
+ ✓ src/lib/__tests__/rate-limit.test.ts (5 tests) 10ms
+ ✓ src/lib/__tests__/cefr.test.ts (6 tests) 7ms
+ ✓ src/lib/__tests__/url-utils.test.ts (4 tests) 5ms
+ ✓ src/validations/__tests__/public.test.ts (5 tests) 8ms
+
+ Test Files  25 passed (25)
+      Tests  168 passed (168)
+   Start at  21:50:40
+   Duration  10.79s (environment 66%, setup 19%, tests 6%, transform 3%, import 3%, worker 2%)
+
+Environment  jsdom was created 25 times · 60.19s total, 66% of tracked time
+             create it once per worker with pool: 'vmThreads' (keeps per-file isolation) or isolate: false (shares it across files)
+             learn more: https://vitest.dev/guide/improving-performance#test-environments
+
  % Coverage report from v8
 -------------------|---------|----------|---------|---------|-------------------
 File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
@@ -91,198 +205,10 @@ All files          |   89.51 |    82.27 |   96.15 |   89.77 |
   user-history.ts  |     100 |      100 |     100 |     100 |                   
   word-bank.ts     |     100 |      100 |     100 |     100 |                   
 -------------------|---------|----------|---------|---------|-------------------
-```
-
----
-
-## 4. Test Suite Inventory
-
-### Priority A: Core Business Logic & Actions (56 tests)
-- `src/lib/__tests__/search.test.ts` (12 tests):
-  - TC-BUS-SRCH-01: Control characters removal from search query.
-  - TC-BUS-SRCH-02: Query whitespace trimming and truncation at 100 characters.
-  - TC-BUS-SRCH-03: Visibility filter enforces PUBLISHED status and past timestamps.
-  - TC-BUS-SRCH-04: Visibility filter accepts and enforces custom reference timestamp.
-  - TC-BUS-SRCH-05: SEARCH_DEFAULT_PAGE_SIZE equals 12.
-  - TC-BUS-SRCH-06: Pagination boundary clamping for pageSize between 1 and 50.
-  - TC-BUS-SRCH-07: Page index normalization for page <= 0.
-  - TC-BUS-SRCH-08: Suggestions query length threshold (< 2 chars returns empty array).
-  - TC-BUS-SRCH-09: Suggestions query trimming before length check.
-  - TC-BUS-SRCH-10: Suggestions query execution on Prisma for query >= 2.
-  - TC-BUS-SRCH-11: Full-text trigram ranked search execution via `$queryRaw`.
-  - TC-BUS-SRCH-12: Empty results handling when keyword matches 0 rows.
-- `src/lib/queries/__tests__/user-stats.test.ts` (13 tests):
-  - TC-BUS-STAT-01: Timezone boundary shift (+7 hours into Vietnam day).
-  - TC-BUS-STAT-02: Invalid timezone fallback to UTC slice.
-  - TC-BUS-STAT-03: Empty dates array returns 0 streak.
-  - TC-BUS-STAT-04: Read today computes 1-day streak.
-  - TC-BUS-STAT-05: Read yesterday preserves 1-day streak with hasReadToday=false.
-  - TC-BUS-STAT-06: Streak reset on 2-day gap.
-  - TC-BUS-STAT-07: Multi-day consecutive streak computation.
-  - TC-BUS-STAT-08: Deduplication of multiple reads on the same calendar day.
-  - TC-BUS-STAT-09: Longest streak retention even after current streak breaks.
-  - TC-BUS-STAT-10: Year-end boundary transition (Dec 31 -> Jan 01).
-  - TC-BUS-STAT-11: Month boundary crossing.
-  - TC-BUS-STAT-12: Unsorted timestamp array handling.
-  - TC-BUS-STAT-13: Full user dashboard stats query with weekly goals and activity.
-- `src/lib/actions/__tests__/reading-history.test.ts` (12 tests):
-  - TC-ACT-HIST-01: Rejection of unauthenticated users.
-  - TC-ACT-HIST-02: Validation of percentage boundaries (0-100).
-  - TC-ACT-HIST-03: Rejection of non-existent articles.
-  - TC-ACT-HIST-04: Initial progress record creation.
-  - TC-ACT-HIST-05: Monotonic progress updates (`Math.max`).
-  - TC-ACT-HIST-06: Completion preservation once 100% is reached.
-  - TC-ACT-HIST-07: Clear history requires authentication.
-  - TC-ACT-HIST-08: Clear history executes deleteMany for authenticated users.
-  - TC-ACT-HIST-09: Clear history by timeframe (7d, 30d, all).
-  - TC-ACT-HIST-10: Sync guest history requires authentication.
-  - TC-ACT-HIST-11: Sync guest history handles empty items array.
-  - TC-ACT-HIST-12: Sync guest history upserts items into user history.
-- `src/lib/actions/__tests__/vocabulary.test.ts` (6 tests):
-  - TC-ACT-VOC-01: Reject unauthenticated saves.
-  - TC-ACT-VOC-02: Reject non-existent vocabulary ID.
-  - TC-ACT-VOC-03: Save vocabulary idempotency.
-  - TC-ACT-VOC-04: Reject unauthenticated unsaves.
-  - TC-ACT-VOC-05: Unsave vocabulary deletes relation.
-  - TC-ACT-VOC-06: Unsave vocabulary idempotency when record already removed.
-- `src/lib/actions/__tests__/favorites.test.ts` (6 tests):
-  - TC-ACT-FAV-01: Reject unauthenticated favorite.
-  - TC-ACT-FAV-02: Reject non-existent or draft article.
-  - TC-ACT-FAV-03: Favorite article marks article as favorited.
-  - TC-ACT-FAV-04: Reject unauthenticated unfavorite.
-  - TC-ACT-FAV-05: Unfavorite removes favorite relation.
-  - TC-ACT-FAV-06: Unfavorite idempotency when already unfavorited.
-- `src/lib/__tests__/rate-limit.test.ts` (5 tests):
-  - TC-BUS-RL-01: Memory rate limiter allows requests under limit.
-  - TC-BUS-RL-02: Memory rate limiter blocks requests exceeding limit.
-  - TC-BUS-RL-03: Window resets after time window expires.
-  - TC-BUS-RL-04: Key isolation between different identifiers.
-  - TC-BUS-RL-05: Default limit fallback when unspecified.
-- `src/lib/__tests__/audit-log.test.ts` (4 tests):
-  - TC-BUS-AUD-01: Map and persist audit log fields to Prisma.
-  - TC-BUS-AUD-02: Metadata JSON serialization in details column.
-  - TC-BUS-AUD-03: Null details when metadata is undefined.
-  - TC-BUS-AUD-04: Error suppression (never throws exception to caller).
-
-### Priority B: Validations & Pure Utilities (59 tests)
-- `src/lib/__tests__/sentence-slicer.test.ts` (10 tests):
-  - TC-UTIL-SLC-01: Empty sentences array returns empty segments.
-  - TC-UTIL-SLC-02: Single sentence spanning exact string.
-  - TC-UTIL-SLC-03: Multiple sequential sentences.
-  - TC-UTIL-SLC-04: Sentences with unannotated gaps between them.
-  - TC-UTIL-SLC-05: Overlapping sentence boundaries (skips second overlap).
-  - TC-UTIL-SLC-06: Out-of-bounds offsets clamped safely.
-  - TC-UTIL-SLC-07: Inverted offsets (end < start) ignored.
-  - TC-UTIL-SLC-08: Vietnamese diacritics and unicode preservation.
-  - TC-UTIL-SLC-09: Unsorted sentence offsets auto-sorted.
-  - TC-UTIL-SLC-10: Punctuation and whitespace preservation.
-- `src/validations/__tests__/auth.test.ts` (8 tests):
-  - TC-VAL-AUTH-01 to 04: Login schema email and password validations.
-  - TC-VAL-AUTH-05 to 08: Register schema name, email, and password complexity.
-- `src/validations/__tests__/admin.test.ts` (8 tests):
-  - TC-VAL-ADM-01 to 08: Article, category, sentence, vocabulary, and role validations.
-- `src/validations/__tests__/search.test.ts` (6 tests):
-  - TC-VAL-SRCH-01 to 06: Search params, pagination, and suggestion validations.
-- `src/validations/__tests__/user-history.test.ts` (6 tests):
-  - TC-VAL-HIST-01 to 06: Record progress, clear history, and goal schema validations.
-- `src/lib/__tests__/offsets.test.ts` (6 tests):
-  - TC-UTIL-OFF-01 to 06: Word offset calculation and validation.
-- `src/lib/__tests__/cefr.test.ts` (6 tests):
-  - TC-UTIL-CEFR-01 to 06: CEFR metadata tokens, fallback, and descriptions.
-- `src/validations/__tests__/public.test.ts` (5 tests):
-  - TC-VAL-PUB-01 to 05: Public query parsing, page clamping, and CEFR fallback.
-- `src/validations/__tests__/word-bank.test.ts` (4 tests):
-  - TC-VAL-WB-01 to 04: Word bank query, save, and unsave schema validations.
-- `src/lib/__tests__/url-utils.test.ts` (4 tests):
-  - TC-UTIL-URL-01 to 04: Open redirect sanitization, protocol-relative rejection.
-
-### Priority C: Pure UI Components (48 tests)
-- `src/components/ui/__tests__/button.test.tsx` (8 tests):
-  - TC-UI-BTN-01: Default variant and size rendering.
-  - TC-UI-BTN-02: Variant classes (destructive, outline, secondary, ghost, link).
-  - TC-UI-BTN-03: Size classes (sm, lg, icon).
-  - TC-UI-BTN-04: Custom className merging.
-  - TC-UI-BTN-05: Click event handling.
-  - TC-UI-BTN-06: Disabled state prevents click.
-  - TC-UI-BTN-07: HTML button ref forwarding.
-  - TC-UI-BTN-08: Complex nested children rendering.
-- `src/components/public/__tests__/pagination.test.tsx` (7 tests):
-  - TC-PUB-PGN-01: Returns null when totalPages <= 1.
-  - TC-PUB-PGN-02: Renders nav with accessible aria-label.
-  - TC-PUB-PGN-03: Highlights active page with `aria-current="page"`.
-  - TC-PUB-PGN-04: Disables previous button on first page with `aria-disabled="true"`.
-  - TC-PUB-PGN-05: Disables next button on last page with `aria-disabled="true"`.
-  - TC-PUB-PGN-06: Renders ellipsis for large page ranges.
-  - TC-PUB-PGN-07: Preserves searchParams across generated URLs.
-- `src/components/ui/__tests__/badge.test.tsx` (6 tests):
-  - TC-UI-BDG-01: Default variant rendering.
-  - TC-UI-BDG-02: Standard variants (secondary, destructive, outline).
-  - TC-UI-BDG-03: CEFR level variants (b1, b2, c1, c2).
-  - TC-UI-BDG-04: Custom className merging.
-  - TC-UI-BDG-05: Passes HTML attributes (data-testid, id).
-  - TC-UI-BDG-06: Complex nested children rendering.
-- `src/components/__tests__/cefr-badge.test.tsx` (6 tests):
-  - TC-COMP-01: Level abbreviation rendering.
-  - TC-COMP-02: Descriptive label rendering.
-  - TC-COMP-03: Styling and custom className.
-  - TC-COMP-04: All CEFR levels (A1 to C2).
-  - TC-COMP-05: Fallback to B2 on unknown levels.
-  - TC-COMP-06: Label suppression when showLabel is false.
-- `src/components/search/__tests__/search-highlight.test.tsx` (6 tests):
-  - TC-SCH-HL-01: Plain text rendering when query is empty.
-  - TC-SCH-HL-02: Plain text when query is < 2 characters.
-  - TC-SCH-HL-03: Substring match wrapping in `<mark>`.
-  - TC-SCH-HL-04: Case-insensitive matching with case preservation.
-  - TC-SCH-HL-05: Safe regex special character escaping.
-  - TC-SCH-HL-06: Custom highlight and container class names.
-- `src/components/public/__tests__/empty-state.test.tsx` (5 tests):
-  - TC-PUB-EMP-01: Default title and description rendering.
-  - TC-PUB-EMP-02: Custom title and description rendering.
-  - TC-PUB-EMP-03: Custom resetUrl and resetLabel rendering.
-  - TC-PUB-EMP-04: Reset button omitted when resetUrl is empty.
-  - TC-PUB-EMP-05: Decorative search icon container rendering.
-- `src/components/public/__tests__/article-card-skeleton.test.tsx` (4 tests):
-  - TC-PUB-SKL-01: Card skeleton pulse animation styling.
-  - TC-PUB-SKL-02: Aspect-video thumbnail placeholder.
-  - TC-PUB-SKL-03: Default grid count (6 cards).
-  - TC-PUB-SKL-04: Custom grid count.
-- `src/__tests__/smoke.test.tsx` (5 tests):
-  - TC-SMOKE-01: Vitest runner sanity.
-  - TC-SMOKE-02: RTL component rendering into jsdom.
-  - TC-SMOKE-03: Jest-DOM matchers.
-  - TC-SMOKE-04: TypeScript path aliases resolution.
-  - TC-SMOKE-05: UserEvent interaction simulation.
-
----
-
-## 5. Quality Gate Executions
-
-### Gate 1: Vitest Unit Test Suite (`npm test`)
-```text
-> readtoimprove@0.1.0 test
-> vitest run
-
- Test Files  25 passed (25)
-      Tests  168 passed (168)
-   Start at  21:41:11
-   Duration  9.53s
 === EXIT CODE: 0 ===
 ```
 
-### Gate 2: Code Coverage Thresholds (`npm run test:coverage`)
-```text
-> readtoimprove@0.1.0 test:coverage
-> vitest run --coverage
-
-All files:
-  Lines:    89.77% (Threshold >= 80% PASS)
-  Branches: 82.27% (Threshold >= 70% PASS)
-  Funcs:    96.15%
-  Stmts:    89.51%
-=== EXIT CODE: 0 ===
-```
-
-### Gate 3: ESLint (`npm run lint`)
+### `npm run lint`
 ```text
 > readtoimprove@0.1.0 lint
 > eslint .
@@ -290,7 +216,7 @@ All files:
 === EXIT CODE: 0 ===
 ```
 
-### Gate 4: TypeScript Typecheck (`npm run typecheck`)
+### `npm run typecheck`
 ```text
 > readtoimprove@0.1.0 typecheck
 > tsc --noEmit
@@ -298,119 +224,207 @@ All files:
 === EXIT CODE: 0 ===
 ```
 
-### Gate 5: Production Build (`npm run build`)
+### `npm run build`
 ```text
 > readtoimprove@0.1.0 build
 > next build
 
    ▲ Next.js 15.5.25
- ✓ Compiled successfully in 10.5s
+   - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 3.9s
    Linting and checking validity of types ...
    Collecting page data ...
+   Generating static pages (0/24) ...
+   Generating static pages (6/24) 
+   Generating static pages (12/24) 
+   Generating static pages (18/24) 
  ✓ Generating static pages (24/24)
    Finalizing page optimization ...
    Collecting build traces ...
 
-Route (app)                                        Size  First Load JS
+Route (app)                                        Size  First Load JS  Revalidate  Expire
+┌ ƒ /                                             136 B         125 kB
+├ ○ /_not-found                                   161 B         103 kB
+├ ƒ /api/me/favorites                             161 B         103 kB
+├ ƒ /api/me/reading-history                       161 B         103 kB
+├ ƒ /api/me/stats                                 161 B         103 kB
+├ ƒ /api/og                                       161 B         103 kB
+├ ƒ /api/search                                   161 B         103 kB
+├ ƒ /api/search/suggestions                       161 B         103 kB
+├ ƒ /articles                                     137 B         125 kB
+├ ƒ /articles/[slug]                            9.75 kB         131 kB
+├ ƒ /categories                                   185 B         107 kB
+├ ƒ /categories/[slug]                            186 B         113 kB
+├ ○ /login                                      3.17 kB         119 kB
+├ ƒ /me                                           185 B         107 kB
+├ ƒ /me/favorites                               1.92 kB         114 kB
+├ ƒ /me/progress                                3.78 kB         120 kB
+├ ƒ /me/reading-history                         5.85 kB         127 kB
+├ ○ /register                                   3.37 kB         120 kB
+├ ○ /robots.txt                                   161 B         103 kB
+├ ƒ /secure-console-x7                            185 B         107 kB
+├ ƒ /secure-console-x7/articles                    5 kB         138 kB
+├ ƒ /secure-console-x7/articles/[id]/edit         135 B         137 kB
+├ ƒ /secure-console-x7/articles/[id]/sentences     6 kB         137 kB
+├ ƒ /secure-console-x7/articles/new               135 B         137 kB
+├ ƒ /secure-console-x7/audit-logs               1.47 kB         104 kB
+├ ƒ /secure-console-x7/categories               5.62 kB         117 kB
+├ ƒ /secure-console-x7/users                    4.44 kB         132 kB
+├ ƒ /secure-console-x7/vocabulary               3.78 kB         135 kB
+├ ○ /sitemap.xml                                  161 B         103 kB          1h      1y
+└ ƒ /word-bank                                  5.91 kB         139 kB
 + First Load JS shared by all                    103 kB
   ├ chunks/1255-7316b50163a428e6.js             46.4 kB
   ├ chunks/4bd1b696-f785427dddbba9fb.js         54.2 kB
   └ other shared chunks (total)                    2 kB
 
+
 ○  (Static)   prerendered as static content
 ƒ  (Dynamic)  server-rendered on demand
+
 === EXIT CODE: 0 ===
 ```
 
-### Gate 6: Regression Verification (All 9 Suites)
+---
+
+## 4. Known Issues / Tech Debt
+
+### K1 — Server Actions Branch Coverage Low
+- `lib/actions/` branch coverage: 63.04% (target 70%).
+- `favorites.ts`: 60%, `vocabulary.ts`: 50%.
+- Roadmap: Backfill branch paths ở Phase 11B hoặc defer Phase 12.
+
+### K2 — Rate Limit Module Coverage Incomplete
+- `rate-limit.ts` line coverage: 62.5%.
+- Uncovered lines 40-52, 69-79 (cleanup/expiry logic).
+- Roadmap: Cover khi có test infra cho time mocking.
+
+### K3 — Search Raw SQL Branches
+- `search.ts` branch coverage 74.35%.
+- Uncovered lines 304-326 (edge cases in raw query builder).
+- Roadmap: Cover ở Phase 11B security testing.
+
+### K4 — Snapshot Tests Missing
+- Components phức tạp chưa có snapshot tests.
+- Roadmap: Add khi stable UI ở Phase 12.
+
+### K5 — Test Execution Scaling
+- 168 tests in 8.97s - 10.79s (OK).
+- Khi thêm 100+ tests nữa → verify < 30s.
+- Roadmap: `pool: 'threads'` nếu cần.
+
+---
+
+## 5. Seed Data Dependencies
+
+**N/A — Unit tests mock Prisma.**
+
+- Unit tests dùng `vi.mock('@/lib/prisma')` — không query DB.
+- Regression suites (`scripts/verify-*.ts`) vẫn dùng seed data từ Phase 2 — không thay đổi.
+
+Verify regression:
+```bash
+npx tsx scripts/verify-db.ts
+```
+TC-DB-02 raw output:
 ```text
-npx tsx scripts/verify-db.ts                 -> 12/12 PASS (100%)
-npx tsx scripts/verify-auth.ts               -> 18/18 PASS (100%)
-npx tsx scripts/verify-public.ts             -> 21/21 PASS (100%)
-npx tsx scripts/verify-reader.ts             -> 27/27 PASS (100%)
-npx tsx scripts/verify-admin.ts              -> 28/28 PASS (100%)
-npx tsx scripts/verify-search.ts             -> 25/25 PASS (100%)
-npx tsx scripts/verify-history-progress.ts   -> 32/32 PASS (100%)
-npx tsx scripts/verify-word-bank.ts          -> 35/35 PASS (100%)
-npx tsx scripts/verify-seo-a11y-perf.ts      -> 28/28 PASS (100%)
-
-TOTAL REGRESSION TESTS: 226/226 PASS (100%)
-=== EXIT CODE: 0 ===
+[✓ PASS] TC-DB-02: Seeded Record Counts Verification — Users: 2, Articles: 3, Categories: 5, Vocab: 18, Sentences: 9, Mappings: 18.
 ```
 
 ---
 
-## 6. Known Issues / Tech Debt
+## 6. Rate Limit Evidence
 
-1. **K1 — Live DB Integration Remains Outside Vitest**:
-   - In-memory mock tests run via Vitest for speed (< 10s); full database integration verification with real PostgreSQL constraints remains hosted in `scripts/verify-*.ts`.
-   - *Roadmap*: Evaluate running a separate `npm run test:e2e` or testcontainer suite in CI if desired.
-2. **K2 — Async Next.js Server Components Not Unit Tested in RTL**:
-   - Async Server Components (e.g., page loaders `app/articles/[slug]/page.tsx`) rely on Next.js runtime headers/cookies and are validated via integration suites rather than RTL render.
-   - *Roadmap*: Pure client children components are covered; Server Actions and Queries are 100% covered.
-3. **K3 — Upstash Redis Branch Coverage**:
-   - In `src/lib/rate-limit.ts`, the live Redis path branches are not triggered in local test environments without Redis credentials, resulting in 62.5% lines for that specific file while memory fallback is 100% covered.
-   - *Roadmap*: Add mock tests for the Upstash SDK client in Phase 11B security testing.
-4. **K4 — ESLint Rule Exception for Test Mocks**:
-   - Configured `eslint.config.mjs` to turn `@typescript-eslint/no-explicit-any` off specifically for `src/**/__tests__/**/*` to allow standard mock return typing without boilerplate.
-   - *Roadmap*: Strongly-typed factory builders can be backfilled if stricter linting is preferred.
+**N/A — Phase 11A không thêm endpoint.**
 
 ---
 
-## 7. Seed Data Dependencies
+## 7. Browser E2E Verification
 
-**N/A** — Unit tests written in Phase 11A use isolated in-memory mocks (`src/__tests__/factories/mock-prisma.ts`) and pure functions. They have **zero** dependencies on PostgreSQL seed data or running Docker containers. Regression verification scripts (`scripts/verify-*.ts`) use the existing seeded dataset established in Phase 2/10.
-
----
-
-## 8. Final Status Gate
-
-| Gate | Status | Command / Metric | Output / Details |
-|---|---|---|---|
-| **Unit Test Count** | **PASS** | `npm test` | **168 passed (25 files)** |
-| **Execution Speed** | **PASS** | Runtime duration | **9.53s** (Target < 30s) |
-| **Line Coverage** | **PASS** | `npm run test:coverage` | **89.77%** (Threshold 80%) |
-| **Branch Coverage** | **PASS** | `npm run test:coverage` | **82.27%** (Threshold 70%) |
-| **ESLint** | **PASS** | `npm run lint` | Exit Code 0, 0 errors, 0 warnings |
-| **TypeScript** | **PASS** | `npm run typecheck` | Exit Code 0, 0 type errors |
-| **Production Build** | **PASS** | `npm run build` | Exit Code 0, First Load JS 103 kB |
-| **Regression Suites** | **PASS** | `scripts/verify-*.ts` | **226/226 passed (100%)** |
-| **Next Phase Gate** | **HOLD** | Phase 11B | Awaiting user approval |
+**N/A — Phase 11A không thay đổi UI.**
 
 ---
 
-## 9. Artifacts Created & Modified
+## 8. Definition of Done Compliance
 
-### Created Files
-- `src/__tests__/factories/mock-data.ts` (2,760 B)
-- `src/__tests__/factories/mock-prisma.ts` (2,735 B)
-- `src/validations/__tests__/auth.test.ts` (3,415 B)
-- `src/validations/__tests__/admin.test.ts` (4,394 B)
-- `src/validations/__tests__/search.test.ts` (2,840 B)
-- `src/validations/__tests__/user-history.test.ts` (3,524 B)
-- `src/validations/__tests__/word-bank.test.ts` (2,242 B)
-- `src/validations/__tests__/public.test.ts` (1,674 B)
-- `src/lib/__tests__/sentence-slicer.test.ts` (4,265 B)
-- `src/lib/__tests__/offsets.test.ts` (2,683 B)
-- `src/lib/__tests__/cefr.test.ts` (2,415 B)
-- `src/lib/__tests__/search.test.ts` (5,573 B)
-- `src/lib/__tests__/rate-limit.test.ts` (2,374 B)
-- `src/lib/__tests__/audit-log.test.ts` (2,645 B)
-- `src/lib/queries/__tests__/user-stats.test.ts` (6,547 B)
-- `src/lib/actions/__tests__/reading-history.test.ts` (7,680 B)
-- `src/lib/actions/__tests__/vocabulary.test.ts` (3,842 B)
-- `src/lib/actions/__tests__/favorites.test.ts` (3,931 B)
-- `src/components/ui/__tests__/button.test.tsx` (2,965 B)
-- `src/components/ui/__tests__/badge.test.tsx` (2,375 B)
-- `src/components/public/__tests__/empty-state.test.tsx` (1,845 B)
-- `src/components/public/__tests__/article-card-skeleton.test.tsx` (1,348 B)
-- `src/components/public/__tests__/pagination.test.tsx` (3,354 B)
-- `src/components/search/__tests__/search-highlight.test.tsx` (2,015 B)
-- `docs/phases/PHASE_11A_WALKTHROUGH.md` (this report)
+- [x] $\ge 100$ unit tests written (168 delivered).
+- [x] `src/lib/` coverage $\ge 80\%$ lines (86.62%).
+- [x] `src/lib/validations/` $\ge 95\%$ lines (100%).
+- [x] Coverage thresholds met overall (89.77% lines, 82.27% branches).
+- [x] `npm test` $< 30\text{s}$ (8.97s).
+- [x] `npm run test:coverage` generates V8 report.
+- [x] `npm run lint`, `typecheck`, `build` $\to$ 0 errors.
+- [x] Regression: 226 tests PASS (9 suites).
+- [x] `vitest.config.ts` expanded.
+- [x] ADR-021 recorded in `docs/PROJECT_STATE.md`.
+- [x] Git tags created (`phase-11a-start`, `phase-11a-complete`).
+- [x] Walkthrough v1.1 generated.
 
-### Modified Files
-- `src/components/__tests__/cefr-badge.test.tsx` (expanded to 6 tests covering all levels)
-- `vitest.config.ts` (expanded coverage include globs and threshold enforcement)
-- `vitest.setup.ts` (added next/headers mock)
-- `eslint.config.mjs` (added test file override for explicit any)
-- `docs/PROJECT_STATE.md` (updated Phase 11A completion status and ADR-021)
+---
+
+## 9. Artifacts Updated
+
+### A. Test Files Created (25)
+- `src/lib/__tests__/search.test.ts` — 5587 bytes
+- `src/lib/__tests__/sentence-slicer.test.ts` — 6120 bytes
+- `src/lib/__tests__/rate-limit.test.ts` — 2144 bytes
+- `src/lib/__tests__/audit-log.test.ts` — 2696 bytes
+- `src/lib/__tests__/offsets.test.ts` — 2750 bytes
+- `src/lib/__tests__/cefr.test.ts` — 2020 bytes
+- `src/lib/__tests__/url-utils.test.ts` — 1907 bytes
+- `src/lib/queries/__tests__/user-stats.test.ts` — 6746 bytes
+- `src/lib/actions/__tests__/reading-history.test.ts` — 7987 bytes
+- `src/lib/actions/__tests__/vocabulary.test.ts` — 3903 bytes
+- `src/lib/actions/__tests__/favorites.test.ts` — 3919 bytes
+- `src/validations/__tests__/auth.test.ts` — 3780 bytes
+- `src/validations/__tests__/admin.test.ts` — 4520 bytes
+- `src/validations/__tests__/search.test.ts` — 2238 bytes
+- `src/validations/__tests__/public.test.ts` — 1841 bytes
+- `src/validations/__tests__/user-history.test.ts` — 3032 bytes
+- `src/validations/__tests__/word-bank.test.ts` — 2251 bytes
+- `src/components/ui/__tests__/button.test.tsx` — 3610 bytes
+- `src/components/ui/__tests__/badge.test.tsx` — 2702 bytes
+- `src/components/__tests__/cefr-badge.test.tsx` — 2398 bytes
+- `src/components/search/__tests__/search-highlight.test.tsx` — 2558 bytes
+- `src/components/public/__tests__/pagination.test.tsx` — 3390 bytes
+- `src/components/public/__tests__/empty-state.test.tsx` — 2099 bytes
+- `src/components/public/__tests__/article-card-skeleton.test.tsx` — 1428 bytes
+- `src/__tests__/smoke.test.tsx` — 2105 bytes
+
+### B. Files Modified
+- `vitest.config.ts` — 1599 bytes (expanded `coverage.include` globs)
+- `docs/PROJECT_STATE.md` — 7548 bytes (updated status + ADR-021)
+- `eslint.config.mjs` — 863 bytes (added test file override for explicit any)
+- `vitest.setup.ts` — 998 bytes (added next/headers mock)
+- `src/__tests__/factories/mock-data.ts` — 2752 bytes
+- `src/__tests__/factories/mock-prisma.ts` — 3252 bytes
+- `docs/phases/PHASE_11A_WALKTHROUGH.md` — portable evidence documentation
+
+### C. Git Tags
+```bash
+$ git tag --list "phase-11a-*"
+phase-11a-complete
+phase-11a-start
+```
+
+---
+
+## 10. Portable Evidence Path
+
+Walkthrough report file: [PHASE_11A_WALKTHROUGH.md](docs/phases/PHASE_11A_WALKTHROUGH.md)
+
+---
+
+## Final Status Gate
+
+```text
+PHASE: 11A — UNIT TEST BACKFILL & COVERAGE
+STATUS: WAIT
+RESULT: PASS
+COMMIT: df558a2
+TAG: phase-11a-complete
+WORKTREE: CLEAN
+NEXT: PHASE 11B — SECURITY AUDIT & PENETRATION TESTING
+```

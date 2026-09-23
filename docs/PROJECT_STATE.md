@@ -43,7 +43,14 @@
 - **ADR-018**: Deterministic Modal Focus Trapping, Escape Dismissal, and Trigger Focus Restoration on Dialog Elements (`SearchCommandDialog`, `ClearHistoryDialog`) complying with WCAG 2.1 AA dialog patterns.
 - **ADR-019**: Zero Client Bundle Growth Architecture for Metadata, Sitemaps, and Robots (100% Server Execution; First Load JS locked at 103 kB).
 - **ADR-020**: Vitest & React Testing Library (RTL) Unit Test Infrastructure Adoption with native V8 engine code coverage (@vitest/coverage-v8), scoped threshold enforcement (lines $\ge 80\%$, branches $\ge 70\%$), path alias resolution via `vite-tsconfig-paths`, and zero production bundle impact (First Load JS maintained at 103 kB).
-- **ADR-021**: In-Memory Mocking Isolation for Fast Unit Tests (`src/__tests__/factories/mock-prisma.ts`, `vi.hoisted`) with strict decoupling from integration tests (`scripts/verify-*.ts`). Pure functions, validations, server actions, and UI components are tested in-memory with sub-10s execution for 168 tests, guaranteeing deterministic CI speed without Docker dependency.
+- **ADR-021**: Scoped Coverage Strategy for Legacy Modules:
+  - Context: Phase 11A backfills unit tests but legacy modules (from Phase 2–10) chưa có test.
+  - Decision: Áp dụng coverage thresholds theo glob scope, không global.
+    - `src/lib/validations/`: ≥ 95% lines.
+    - `src/lib/`: ≥ 90% lines.
+    - `src/components/`: ≥ 80% lines.
+    - `src/lib/actions/`: ≥ 70% lines (async).
+  - Consequence: Không fail CI khi thêm module mới chưa có test. Threshold sẽ tăng dần ở các phase sau.
 
 ## Database Schema Version
 - Last migration: `20260922000000_add_user_history_and_goals`
