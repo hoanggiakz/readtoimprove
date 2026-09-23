@@ -6,6 +6,7 @@
 
 # Testing
 /coverage
+/.vitest
 
 # Next.js build output
 /.next/
