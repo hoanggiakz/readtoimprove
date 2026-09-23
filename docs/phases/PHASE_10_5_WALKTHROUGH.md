@@ -1,4 +1,4 @@
-# Walkthrough — Phase 10.5: Unit Test Framework Setup [FINAL v1.0]
+# Walkthrough — Phase 10.5: Unit Test Framework Setup [FINAL v1.1]
 
 Phase 10.5 of **ReadToImprove** is fully implemented, verified, and passing 100% of all Unit Tests (**12/12 tests in 2.75s** with 100% coverage on tested modules) and 100% of all existing Regression Tests (**226/226 tests across 9 suites**). This walkthrough provides unabridged raw command outputs for `npm test`, `npm run test:coverage`, `npm run lint`, `npm run typecheck`, production `next build`, and all 9 regression suites complying with Master Prompt v3 requirements.
 
@@ -53,7 +53,7 @@ Phase 10.5 of **ReadToImprove** is fully implemented, verified, and passing 100%
 
 | Package | Version | Purpose |
 |---|---|---|
-| `vitest` | `^5.0.1` | Core ESM test runner |
+| `vitest` | `^5.0.1` | Core ESM test runner (npm registry latest verified) |
 | `@vitest/ui` | `^5.0.1` | Local visual test inspection interface |
 | `@vitest/coverage-v8` | `^5.0.1` | Native V8 code coverage provider |
 | `jsdom` | `^29.1.1` | W3C DOM simulation environment |
@@ -113,19 +113,21 @@ All files        |     100 |      100 |     100 |     100 |
 -----------------|---------|----------|---------|---------|-------------------
 ```
 
-### 3.3 Lint Verification (`npm run lint`)
-```
+### 3.3 Lint Verification (`npm run lint 2>&1; echo "=== EXIT CODE: $? ==="`)
+```text
 > readtoimprove@0.1.0 lint
 > eslint .
-```
-*(Exit code 0 — 0 errors, 0 warnings)*
 
-### 3.4 Typecheck Verification (`npm run typecheck`)
+=== EXIT CODE: 0 ===
 ```
+
+### 3.4 Typecheck Verification (`npm run typecheck 2>&1; echo "=== EXIT CODE: $? ==="`)
+```text
 > readtoimprove@0.1.0 typecheck
 > tsc --noEmit
+
+=== EXIT CODE: 0 ===
 ```
-*(Exit code 0 — 0 errors)*
 
 ### 3.5 Production Build Verification (`npm run build`)
 ```
@@ -184,6 +186,12 @@ Route (app)                                        Size  First Load JS  Revalida
   └ other shared chunks (total)                    2 kB
 ```
 
+### 3.6 Rate Limit Evidence
+**N/A — Phase 10.5 không thêm endpoint.**
+
+### 3.7 Browser E2E Verification
+**N/A — Phase 10.5 không thay đổi UI.**
+
 ---
 
 ## 4. Full Regression Verification Suites (226/226 PASS)
@@ -204,7 +212,47 @@ Route (app)                                        Size  First Load JS  Revalida
 
 ---
 
-## 5. Architecture Decisions Recorded
+## 5. Seed Data Dependencies
+
+**N/A — Phase 10.5 là infrastructure phase.**
+
+- Không có test mới phụ thuộc seed data.
+- Smoke tests dùng fixtures in-memory (không query DB).
+- Regression suites dùng seed data từ Phase 2 — không thay đổi.
+
+Verify regression giữ nguyên: `npx tsx scripts/verify-db.ts` → TC-DB-02 vẫn PASS:
+```text
+[✓ PASS] TC-DB-02: Seeded Record Counts Verification — Users: 2, Articles: 3, Categories: 5, Vocab: 18, Sentences: 9, Mappings: 18.
+```
+
+---
+
+## 6. Known Issues / Tech Debt
+
+### K1 — Coverage Scoped to 2 Files Only
+- Phase 10.5 là infrastructure setup phase, chỉ cấu hình đo coverage cho `src/lib/url-utils.ts` và `src/components/ui/cefr-badge.tsx` (đạt 100%).
+- Toàn bộ `src/lib/actions/`, `src/lib/queries/`, và các components UI khác hiện có 0% unit test coverage (nhưng đã được bảo vệ bởi 226 tests qua 9 integration suites).
+- *Roadmap*: Phase 11 sẽ backfill incrementally cho các modules nghiệp vụ và features mới.
+
+### K2 — Vitest Version Verification
+- `package.json` cài đặt `vitest@^5.0.1`.
+- Đã xác thực trực tiếp trên registry: `npm view vitest version` trả về chính xác `5.0.1` (bản release chính thức mới nhất, hoạt động hoàn hảo và ổn định cùng Vite 6 / Node 22+).
+
+### K3 — Next.js Mocks Are Lightweight Stubs
+- Các mocks `useRouter`, `usePathname`, `useSearchParams`, `next/image` trong `vitest.setup.ts` là stubs cơ bản phục vụ render test.
+- Chưa bao quát hết các edge cases phức tạp của Next.js App Router (như redirect intercept, server-side params promise resolution trong dynamic routes, image loader options).
+- *Roadmap*: Mở rộng mocks chi tiết trong `vitest.setup.ts` khi viết component tests sâu hơn ở Phase 11.
+
+### K4 — Test File Naming & Organization Convention
+- Cấu hình `vitest.config.ts` hỗ trợ song song cả colocated tests (`*.test.ts` cạnh file nguồn) và thư mục `__tests__/`.
+- Quy chuẩn chính thức đã thống nhất trong `docs/testing/README.md`: Đặt trong `__tests__/` cho components và server actions, colocated cho pure logic utils nhỏ.
+
+### K5 — React 19 Peer Dependency Warnings
+- `@testing-library/react@^16.3.3` tương thích hoàn toàn với React 19. Khi cài đặt npm hiển thị cảnh báo phụ về `tsconfck@3.1.6` không liên quan đến runtime. Không có xung đột peer dependency nào làm hỏng build hay runtime.
+
+---
+
+## 7. Architecture Decisions Recorded
 
 In `docs/PROJECT_STATE.md`:
 - **ADR-020: Vitest & React Testing Library (RTL) Unit Test Infrastructure Adoption**:
@@ -215,7 +263,43 @@ In `docs/PROJECT_STATE.md`:
 
 ---
 
-## 6. Definition of Done Compliance
+## 8. Artifacts Updated
+
+### A. Files Created (7)
+- `vitest.config.ts` — 918 bytes
+- `vitest.setup.ts` — 737 bytes
+- `src/__tests__/smoke.test.tsx` — 2,105 bytes
+- `src/lib/__tests__/url-utils.test.ts` — 1,907 bytes
+- `src/components/__tests__/cefr-badge.test.tsx` — 1,221 bytes
+- `docs/testing/README.md` — 4,433 bytes
+- `docs/testing/unit-test-strategy.md` — 4,508 bytes
+
+### B. Files Modified (4)
+- `package.json` — 4 scripts added + 9 devDependencies
+- `eslint.config.mjs` — `coverage/**` + `.vitest/**` ignored
+- `.gitignore` — `/.vitest` added
+- `docs/PROJECT_STATE.md` — ADR-020 + status update to Phase 10.5
+
+### C. Git Tags
+```bash
+$ git tag --list "phase-10.5-*"
+phase-10.5-complete
+phase-10.5-start
+```
+
+### D. package.json Scripts Diff
+```json
+{
+  "test": "vitest run",
+  "test:watch": "vitest",
+  "test:ui": "vitest --ui",
+  "test:coverage": "vitest run --coverage"
+}
+```
+
+---
+
+## 9. Definition of Done Compliance
 
 - [x] `vitest`, `@vitest/ui`, `@vitest/coverage-v8`, `jsdom`, `@testing-library/react`, `@testing-library/jest-dom`, `@testing-library/user-event`, `vite-tsconfig-paths`, `@vitejs/plugin-react` installed.
 - [x] `vitest.config.ts` and `vitest.setup.ts` configured with jsdom, coverage, matchers, Next.js mocks.
@@ -223,11 +307,25 @@ In `docs/PROJECT_STATE.md`:
 - [x] `npm run test:watch` and `npm run test:ui` configured in `package.json`.
 - [x] `npm run test:coverage` outputs v8 report (100% across all metrics on target units).
 - [x] 12 smoke tests pass (5 runner/DOM, 4 utility, 3 component).
-- [x] `npm run lint` $\to$ 0 errors, 0 warnings.
-- [x] `npm run typecheck` $\to$ 0 errors.
+- [x] `npm run lint` $\to$ 0 errors, 0 warnings (exit code 0).
+- [x] `npm run typecheck` $\to$ 0 errors (exit code 0).
 - [x] `npm run build` $\to$ success (103 kB First Load JS).
 - [x] All 9 regression verification suites pass (226/226 tests).
 - [x] `docs/testing/README.md` created with conventions and guides.
 - [x] `docs/testing/unit-test-strategy.md` created with testing layer architecture.
 - [x] `docs/PROJECT_STATE.md` updated with ADR-020.
 - [x] Branch `feat/phase-10.5` active; tag `phase-10.5-start` recorded.
+
+---
+
+## 10. Final Status Gate
+
+```text
+PHASE: 10.5 — UNIT TEST FRAMEWORK SETUP
+STATUS: WAIT
+RESULT: PASS
+COMMIT: 8714807
+TAG: phase-10.5-complete
+WORKTREE: CLEAN
+NEXT: PHASE 11 — TESTING & SECURITY AUDIT
+```
