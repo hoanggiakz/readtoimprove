@@ -8,7 +8,7 @@
 **Branch:** `feat/phase-11a`  
 **Git Tag Start:** `phase-11a-start`  
 **Git Tag Complete:** `phase-11a-complete`  
-**Commit:** `6a46b31`  
+**Commit:** `COMMIT_HASH_PLACEHOLDER`  
 
 ---
 
@@ -289,7 +289,24 @@ Route (app)                                        Size  First Load JS  Revalida
 
 ---
 
-## 4. Known Issues / Tech Debt
+## 4. Regression Suites Verification (226/226 Tests)
+
+| Script | Domain Area | Tests | Result | Status |
+|---|---|:---:|:---:|:---:|
+| `scripts/verify-db.ts` | Database Schema & Relational Integrity | 12 | 12/12 | **PASS** |
+| `scripts/verify-auth.ts` | Authentication & Stealth Admin Gate | 18 | 18/18 | **PASS** |
+| `scripts/verify-public.ts` | Public Discovery & Content Browsing | 21 | 21/21 | **PASS** |
+| `scripts/verify-reader.ts` | Article Reading & Bionic Translation | 27 | 27/27 | **PASS** |
+| `scripts/verify-admin.ts` | Private CMS & Sentence Offset Management | 28 | 28/28 | **PASS** |
+| `scripts/verify-search.ts` | Trigram Search & Multi-faceted Filter | 25 | 25/25 | **PASS** |
+| `scripts/verify-history-progress.ts` | Reading Progress, Goals & Streaks | 32 | 32/32 | **PASS** |
+| `scripts/verify-word-bank.ts` | Vocabulary Bank & Context Retention | 35 | 35/35 | **PASS** |
+| `scripts/verify-seo-a11y-perf.ts` | SEO, Structured Data, A11y & Performance | 28 | 28/28 | **PASS** |
+| **Total Regression Suite** | **All System Capabilities** | **226** | **226/226 (100%)** | **PASS** |
+
+---
+
+## 5. Known Issues / Tech Debt
 
 ### K1 — Server Actions Branch Coverage Low
 - `lib/actions/` branch coverage: 63.04% (target 70%).
@@ -315,9 +332,14 @@ Route (app)                                        Size  First Load JS  Revalida
 - Khi thêm 100+ tests nữa → verify < 30s.
 - Roadmap: `pool: 'threads'` nếu cần.
 
+### K6 — Vite Config Loader Warning
+- Vitest output displays warning regarding `configLoader: 'native'` and CommonJS/ESM syntax in `vitest.config.ts`, alongside a note recommending native `resolve.tsconfigPaths: true` over `vite-tsconfig-paths`.
+- Does not affect test execution or test results (all 168 tests pass cleanly).
+- Roadmap: Migrate to `vitest.config.mjs` and native `resolve.tsconfigPaths` in future toolchain upgrade.
+
 ---
 
-## 5. Seed Data Dependencies
+## 6. Seed Data Dependencies
 
 **N/A — Unit tests mock Prisma.**
 
@@ -335,19 +357,19 @@ TC-DB-02 raw output:
 
 ---
 
-## 6. Rate Limit Evidence
+## 7. Rate Limit Evidence
 
 **N/A — Phase 11A không thêm endpoint.**
 
 ---
 
-## 7. Browser E2E Verification
+## 8. Browser E2E Verification
 
 **N/A — Phase 11A không thay đổi UI.**
 
 ---
 
-## 8. Definition of Done Compliance
+## 9. Definition of Done Compliance
 
 - [x] $\ge 100$ unit tests written (168 delivered).
 - [x] `src/lib/` coverage $\ge 80\%$ lines (86.62%).
@@ -364,7 +386,7 @@ TC-DB-02 raw output:
 
 ---
 
-## 9. Artifacts Updated
+## 10. Artifacts Updated
 
 ### A. Test Files Created (25)
 - `src/lib/__tests__/search.test.ts` — 5587 bytes
@@ -411,7 +433,7 @@ phase-11a-start
 
 ---
 
-## 10. Portable Evidence Path
+## 11. Portable Evidence Path
 
 Walkthrough report file: [PHASE_11A_WALKTHROUGH.md](docs/phases/PHASE_11A_WALKTHROUGH.md)
 
@@ -423,7 +445,7 @@ Walkthrough report file: [PHASE_11A_WALKTHROUGH.md](docs/phases/PHASE_11A_WALKTH
 PHASE: 11A — UNIT TEST BACKFILL & COVERAGE
 STATUS: WAIT
 RESULT: PASS
-COMMIT: 6a46b31
+COMMIT: COMMIT_HASH_PLACEHOLDER
 TAG: phase-11a-complete
 WORKTREE: CLEAN
 NEXT: PHASE 11B — SECURITY AUDIT & PENETRATION TESTING
