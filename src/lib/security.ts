@@ -5,6 +5,56 @@ import { prisma } from "@/lib/prisma";
 import { sanitizeReturnUrl } from "@/lib/url-utils";
 
 /**
+ * Masks an IPv4 or IPv6 address to prevent storing raw PII in audit logs.
+ * IPv4: replaces the last octet with 'xxx' (e.g., 192.168.1.42 -> 192.168.1.xxx).
+ * IPv6: preserves the first 3 groups and masks the remainder.
+ */
+export function maskIpAddress(ip?: string | null): string {
+  if (!ip || typeof ip !== "string") return "unknown";
+  const trimmed = ip.trim();
+  if (!trimmed) return "unknown";
+
+  // Check IPv4
+  if (trimmed.includes(".")) {
+    const parts = trimmed.split(".");
+    if (parts.length === 4) {
+      return `${parts[0]}.${parts[1]}.${parts[2]}.xxx`;
+    }
+  }
+
+  // Check IPv6
+  if (trimmed.includes(":")) {
+    const parts = trimmed.split(":");
+    if (parts.length >= 3) {
+      return `${parts[0]}:${parts[1]}:${parts[2]}:xxxx:xxxx:xxxx`;
+    }
+  }
+
+  return "masked";
+}
+
+/**
+ * Masks an email address to protect personal identifiable information.
+ * E.g., user@example.com -> u***r@example.com
+ * If user part <= 2 chars: e.g., ab@example.com -> a*@example.com
+ */
+export function maskEmail(email?: string | null): string {
+  if (!email || typeof email !== "string" || !email.includes("@")) {
+    return "masked@unknown";
+  }
+  const [local, domain] = email.split("@");
+  if (!local || !domain) return "masked@unknown";
+
+  if (local.length <= 1) {
+    return `*@${domain}`;
+  }
+  if (local.length === 2) {
+    return `${local[0]}*@${domain}`;
+  }
+  return `${local[0]}${"*".repeat(local.length - 2)}${local[local.length - 1]}@${domain}`;
+}
+
+/**
  * Enforces that the incoming request has a valid authenticated session.
  * Throws redirect to /login if unauthenticated.
  */
@@ -24,7 +74,7 @@ export async function requireAuth(returnUrl?: string): Promise<SessionUser> {
  * Enforces strict Administrator privileges on Server Components and Server Actions.
  * 1. Verifies authenticated session.
  * 2. Real-time PostgreSQL database check verifying role === 'ADMIN' and isActive === true.
- * 3. Logs unauthorized attempts to AuditLog table.
+ * 3. Logs unauthorized attempts to AuditLog table with PII masking.
  * 4. Throws 403 Forbidden or redirects.
  */
 export async function requireAdmin(returnUrl: string = "/secure-console-x7"): Promise<SessionUser> {
@@ -46,7 +96,7 @@ export async function requireAdmin(returnUrl: string = "/secure-console-x7"): Pr
   });
 
   if (!user || !user.isActive || user.role !== Role.ADMIN) {
-    // Log security violation to AuditLog table
+    // Log security violation to AuditLog table with masked email
     try {
       await prisma.auditLog.create({
         data: {
@@ -55,7 +105,7 @@ export async function requireAdmin(returnUrl: string = "/secure-console-x7"): Pr
           entity: "AdminConsole",
           entityId: returnUrl,
           details: JSON.stringify({
-            attemptedBy: session.user.email,
+            attemptedBy: maskEmail(session.user.email),
             actualRole: user?.role || "UNKNOWN",
             isActive: user?.isActive ?? false,
           }),
@@ -77,7 +127,7 @@ export async function requireAdmin(returnUrl: string = "/secure-console-x7"): Pr
 }
 
 /**
- * Records an authorized administrative mutation in the AuditLog.
+ * Records an authorized administrative mutation in the AuditLog with PII masking.
  */
 export async function logAudit(params: {
   userId?: string;
@@ -96,7 +146,7 @@ export async function logAudit(params: {
         entity: params.entity,
         entityId: params.entityId,
         details: params.details ? JSON.stringify(params.details) : null,
-        ipAddress: params.ipAddress,
+        ipAddress: params.ipAddress ? maskIpAddress(params.ipAddress) : null,
         userAgent: params.userAgent,
       },
     });

@@ -29,6 +29,7 @@ jobs:
     - name: Generate Prisma Client
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/readtoimprove?schema=public' }}
+        DIRECT_URL: ${{ secrets.DIRECT_URL || secrets.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/readtoimprove?schema=public' }}
       run: npx prisma generate
 
     - name: Type check
@@ -40,6 +41,7 @@ jobs:
     - name: Apply database migrations
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        DIRECT_URL: ${{ secrets.DIRECT_URL || secrets.DATABASE_URL }}
       run: |
         if [ -n "$DATABASE_URL" ]; then
           echo "Applying Prisma migrations to target database..."
@@ -51,6 +53,7 @@ jobs:
     - name: Build Next.js application
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        DIRECT_URL: ${{ secrets.DIRECT_URL || secrets.DATABASE_URL }}
         NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL || 'http://localhost:3000' }}
         AUTH_SECRET: ${{ secrets.AUTH_SECRET || 'f4c6e9a8b1d2c3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8' }}
       run: npm run build
