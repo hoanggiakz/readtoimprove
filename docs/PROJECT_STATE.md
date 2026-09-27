@@ -1,11 +1,11 @@
 # PROJECT STATE
 
 ## Current Status
-- PHASE: 11B — Security Audit & Penetration Testing
-- STATUS: WAIT
+- PHASE: 12 — Vercel Deployment & Production Verification
+- STATUS: IN_PROGRESS (Milestone 12A — Infrastructure Setup)
 - RESULT: PASS
-- LAST_UPDATED: 2026-09-27T14:10:00Z
-- BRANCH: feat/phase-11b
+- LAST_UPDATED: 2026-09-27T14:20:00Z
+- BRANCH: feat/phase-12
 
 ## Completed Phases
 - [x] Phase 0 — Project Discovery (artifact: `/docs/00_DISCOVERY_AND_REQUIREMENTS.md` to `/docs/05_RISKS_AMBIGUITIES_AND_DECISIONS.md`)
@@ -67,6 +67,15 @@
     3. Dependency posture: Transitive dev/build dependencies (PostCSS in Next 15, deepmerge-ts in Prisma) evaluated as non-exploitable; breaking major updates (`--force`) strictly avoided.
     4. Standalone load testing script with k6 created (`scripts/load-test.js`), execution deferred to Phase 12 staging.
   - Consequence: Strict adherence to OWASP Top 10 guidelines; zero bundle impact; First Load JS remains locked at 103 kB.
+- **ADR-023**: Production Vercel & Neon Serverless Dual-URL Deployment Architecture:
+  - Context: Production serverless deployment requires resilient connection pooling to handle high-concurrency request spikes without exhausting database connections, while maintaining direct unpooled access for executing schema migrations.
+  - Decision:
+    1. Hosting on Vercel Edge/Serverless platform in Singapore (`sin1`).
+    2. Neon Serverless PostgreSQL with dual-connection URLs: `DATABASE_URL` (pooled via PgBouncer for Next.js runtime queries) and `DIRECT_URL` (unpooled direct connection for `prisma migrate deploy`).
+    3. Production Node engine requirement locked to `>=20.0.0` in `package.json`.
+    4. Singapore regional co-location for Vercel functions (`sin1`) and database (`ap-southeast-1`) minimizing round-trip query latency to < 35ms for Vietnam users.
+    5. Instant rollback readiness via `vercel rollback` (< 30s) and Neon copy-on-write database branch snapshots.
+  - Consequence: High serverless concurrency scaling, zero connection starvation, instant rollback capability, and zero production bundle growth.
 
 ## Database Schema Version
 - Last migration: `20260922000000_add_user_history_and_goals`
