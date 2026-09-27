@@ -1,11 +1,11 @@
 # PROJECT STATE
 
 ## Current Status
-- PHASE: 11A — Unit Test Backfill & Coverage
+- PHASE: 11B — Security Audit & Penetration Testing
 - STATUS: WAIT
 - RESULT: PASS
-- LAST_UPDATED: 2026-09-23T21:45:00Z
-- BRANCH: feat/phase-11a
+- LAST_UPDATED: 2026-09-27T14:10:00Z
+- BRANCH: feat/phase-11b
 
 ## Completed Phases
 - [x] Phase 0 — Project Discovery (artifact: `/docs/00_DISCOVERY_AND_REQUIREMENTS.md` to `/docs/05_RISKS_AMBIGUITIES_AND_DECISIONS.md`)
@@ -21,6 +21,7 @@
 - [x] Phase 10 — SEO / Accessibility / Performance (artifact: `/docs/phases/PHASE_10_REPORT.md`)
 - [x] Phase 10.5 — Unit Test Framework Setup (artifact: `/docs/phases/PHASE_10_5_WALKTHROUGH.md`)
 - [x] Phase 11A — Unit Test Backfill & Coverage (artifact: `/docs/phases/PHASE_11A_WALKTHROUGH.md`)
+- [x] Phase 11B — Security Audit & Penetration Testing (artifact: `/docs/phases/PHASE_11B_WALKTHROUGH.md`, commit: `752b2d3`)
 
 ## Architecture Decisions (ADR)
 - **ADR-001**: Signed cryptographic JWT sessions via `jose` + bcrypt password hashing + PostgreSQL session verification (`auth()`, `requireAuth()`, `requireAdmin()`).
@@ -51,6 +52,21 @@
     - `src/components/`: ≥ 80% lines.
     - `src/lib/actions/`: ≥ 70% lines (async).
   - Consequence: Không fail CI khi thêm module mới chưa có test. Threshold sẽ tăng dần ở các phase sau.
+- **ADR-022**: Global HTTP Security Headers, PII Masking, and Security Hardening Posture:
+  - Context: Production readiness requires robust defense-in-depth against XSS, clickjacking, MIME sniffing, data leakage, and unauthorized cross-origin resource embedding.
+  - Decision:
+    1. Global HTTP Security Headers configured in `next.config.ts` via `headers()`:
+       - Content-Security-Policy (CSP): `default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https:; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'`
+       - Strict-Transport-Security (HSTS): `max-age=63072000; includeSubDomains; preload`
+       - X-Frame-Options: `DENY`
+       - X-Content-Type-Options: `nosniff`
+       - Referrer-Policy: `strict-origin-when-cross-origin`
+       - Permissions-Policy: `camera=(), microphone=(), geolocation=(), browsing-topics=()`
+       - Server fingerprinting suppressed via `poweredByHeader: false`.
+    2. PII Masking: Redact IP addresses (IPv4 to `/24` e.g., `192.168.1.xxx`, IPv6 to `/48`) and emails (redacted local-part) in all admin security audit alerts and logging.
+    3. Dependency posture: Transitive dev/build dependencies (PostCSS in Next 15, deepmerge-ts in Prisma) evaluated as non-exploitable; breaking major updates (`--force`) strictly avoided.
+    4. Standalone load testing script with k6 created (`scripts/load-test.js`), execution deferred to Phase 12 staging.
+  - Consequence: Strict adherence to OWASP Top 10 guidelines; zero bundle impact; First Load JS remains locked at 103 kB.
 
 ## Database Schema Version
 - Last migration: `20260922000000_add_user_history_and_goals`
@@ -63,11 +79,14 @@
 ## Known Issues / Tech Debt
 - Upstash Redis rate limiter operates with in-memory sliding window fallback in local dev without Redis credentials.
 - External search engine (Meilisearch/Elasticsearch) migration deferred until catalog exceeds 10,000 articles and p95 search latency exceeds 200ms for 7 consecutive days.
-- All 9 regression verification suites (`verify-db.ts`, `verify-auth.ts`, `verify-admin.ts`, `verify-public.ts`, `verify-reader.ts`, `verify-word-bank.ts`, `verify-search.ts`, `verify-history-progress.ts`, `verify-seo-a11y-perf.ts` — 226 tests total), Vitest unit test suite (168 tests), `typecheck`, `lint`, and Next.js production `build` pass with 100% success.
-- Phase 11B (Security Audit & Penetration Testing) scheduled to run static vulnerability scans, OWASP Top 10 checks, auth bypass attacks, and rate-limit audit.
+- PostCSS transitive prototype pollution advisory (CVE-2023-44270) in `next@15.2.0` and `deepmerge-ts` in `prisma@6.4.1` acknowledged as low risk / non-exploitable dev/build dependencies; breaking major updates avoided.
+- k6 load test execution deferred to Phase 12 staging environment (script ready at `scripts/load-test.js`).
+- Admin MFA (TOTP) architectural evaluation completed; RFC 6238 TOTP roadmap scheduled for Phase 12+ enterprise tier.
+- All 9 regression verification suites (`verify-db.ts`, `verify-auth.ts`, `verify-admin.ts`, `verify-public.ts`, `verify-reader.ts`, `verify-word-bank.ts`, `verify-search.ts`, `verify-history-progress.ts`, `verify-seo-a11y-perf.ts` — 226 tests total), Vitest unit & security test suite (204 tests), `typecheck`, `lint`, and Next.js production `build` pass with 100% success (430 total tests passing).
 
 ## Next Phases
-- PHASE 11B — Security Audit & Penetration Testing
-- Status: Awaiting user approval (`APPROVE PHASE 11A`)
+- PHASE 12 — Staging & Production Deployment
+- Status: Awaiting user approval (`APPROVE PHASE 11B`)
+
 
 
